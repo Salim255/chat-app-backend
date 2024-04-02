@@ -1,5 +1,4 @@
-const express = require('express')
-const app = express()
+const app = require('./src/app')
 const PORT = 4003
 
 app.get('/', (req, res) => {
