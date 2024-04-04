@@ -19,5 +19,8 @@ module.exports = {
   parserOptions: {
     ecmaVersion: 'latest'
   },
-  rules: {}
+  rules: {
+    // other rules
+    'no-undef': 'off' // or 'warn' to show warnings instead of errors
+  }
 }

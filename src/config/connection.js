@@ -1,9 +1,8 @@
-const dbConfig = require('./db')
-
+require('dotenv').config()
 module.exports = {
-  host: dbConfig.db_host,
-  port: dbConfig.db_port,
-  database: dbConfig.database,
-  user: dbConfig.db_user,
-  password: dbConfig.db_password
+  host: process.env.DB_HOST,
+  port: process.env.DB_PORT,
+  database: process.env.DB_DATABASE,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD
 }
