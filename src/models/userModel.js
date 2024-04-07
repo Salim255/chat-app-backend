@@ -1,6 +1,22 @@
+const pool = require('../config/pool')
+
 class User {
-  static counter () {
-    return 1
+  static async insert (data) {
+    const { rows } = await pool.query(`
+    INSERT INTO users
+        (first_name, last_name, email, password)
+    VALUES
+        ($1, $2, $3, $4) RETURNING *;`,
+    [data.firstName, data.lastName, data.email, data.hashedPassword]
+    )
+    return rows[0]
+  }
+
+  static async counter () {
+    const { rows } = await pool.query(`
+        SELECT COUNT(*) FROM users ;
+    `)
+    return rows[0].count
   }
 
   static create () {
@@ -8,4 +24,4 @@ class User {
   }
 }
 
-module.exports = new User()
+module.exports = User
