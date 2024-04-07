@@ -1,7 +1,7 @@
 require('dotenv').config()
 const pool = require('../config/pool')
 const { randomBytes } = require('crypto')
-// const { default: migrate } = require('node-pg-migrate')
+const { default: migrate } = require('node-pg-migrate')
 const format = require('pg-format')
 const SCHEMA_OPTS = require('../config/testConnection')
 const DEFAULT_OPTS = require('../config/testConnection')
@@ -29,6 +29,26 @@ class Context {
     await pool.close()
 
     // Apply app migration
+    await migrate({
+      schema: roleName,
+
+      direction: 'up',
+
+      log: () => {},
+
+      noLock: true,
+
+      dir: 'migrations',
+
+      databaseUrl: {
+        host: DEFAULT_OPTS.host,
+        port: DEFAULT_OPTS.port,
+        database: DEFAULT_OPTS.database,
+        user: roleName,
+        password: roleName
+      }
+
+    })
 
     // Connect to P£G with newly created role
     SCHEMA_OPTS.user = roleName
