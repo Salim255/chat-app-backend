@@ -10,7 +10,6 @@ let context
 
 beforeAll(async () => {
   context = await Context.build()
-  console.log(context, 'Hello');
 })
 
 afterAll(() => {
@@ -23,21 +22,21 @@ describe('User test handler', () => {
       first_name: 'salim',
       last_name: 'hassan',
       email: 'a@gmail.com',
-      password: '3333'
+      password: 'z'
     }
 
     const startCount = await userController.counter()
 
     await request(buildAPP())
-      .post('/app/v1/users/signup')
+      .post('/api/v1/users/signup')
       .send(userData)
       .expect(200)
       .then(response => {
-        createdUserId = response.body.data.id
-        token = response.body.data.token
+        // createdUserId = response.body.data.id
+        // token = response.body.data.token
       })
 
-    const finishCount = await userController.count()
+    const finishCount = await userController.counter()
 
     expect(finishCount - startCount).toEqual(1)
   })
