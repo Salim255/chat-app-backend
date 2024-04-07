@@ -1,8 +1,7 @@
 const express = require('express')
 const router = express.Router()
+const userController = require('../controllers/authController')
 
-router.get('/', (req, res) => {
-  res.send('Hello from users')
-})
+router.post('/signup', userController.signup)
 
 module.exports = router
