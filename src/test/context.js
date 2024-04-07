@@ -3,7 +3,6 @@ const pool = require('../config/pool')
 const { randomBytes } = require('crypto')
 const { default: migrate } = require('node-pg-migrate')
 const format = require('pg-format')
-const SCHEMA_OPTS = require('../config/testConnection')
 const DEFAULT_OPTS = require('../config/testConnection')
 
 class Context {
@@ -16,11 +15,10 @@ class Context {
     const roleName = 'a' + randomBytes(4).toString('hex')
 
     // Connection to PG
-
     await pool.connect(DEFAULT_OPTS)
 
     // Crete a new role
-    await pool.query(format('CREATE %I WITH LOGIN PASSWORD %L', roleName, roleName))
+    await pool.query(format('CREATE ROLE %I WITH LOGIN PASSWORD %L;', roleName, roleName))
 
     // Create schema
     await pool.query(format('CREATE SCHEMA %I AUTHORIZATION %I;', roleName, roleName))
@@ -51,8 +49,14 @@ class Context {
     })
 
     // Connect to P£G with newly created role
-    SCHEMA_OPTS.user = roleName
-    SCHEMA_OPTS.password = roleName
+    const SCHEMA_OPTS =
+    {
+      host: DEFAULT_OPTS.host,
+      port: DEFAULT_OPTS.port,
+      database: DEFAULT_OPTS.database,
+      user: roleName,
+      password: roleName
+    }
     await pool.connect(SCHEMA_OPTS)
     return new Context(roleName)
   }
@@ -63,7 +67,6 @@ class Context {
 
     // Reconnect as our root user
     await pool.connect(DEFAULT_OPTS)
-
     // Delete created schema and role
     await pool.query(format('DROP SCHEMA %I CASCADE;', this.roleName))
 
