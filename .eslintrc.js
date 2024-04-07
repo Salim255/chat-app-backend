@@ -21,6 +21,8 @@ module.exports = {
   },
   rules: {
     // other rules
-    'no-undef': 'off' // or 'warn' to show warnings instead of errors
+    'no-undef': 'off', // or 'warn' to show warnings instead of errors,
+    semi: 'off',
+    'comma-dangle': ['error', 'always-multiline']
   }
 }
