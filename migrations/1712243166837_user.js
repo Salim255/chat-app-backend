@@ -5,33 +5,50 @@ exports.shorthands = undefined
 exports.up = pgm => {
   pgm.sql(
   `
-      CREATE TABLE 'user' (
-            id SERIAL PRIMARY KEY,
+    CREATE TABLE users (
+      id SERIAL PRIMARY KEY,
 
-            created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+      created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
 
-            updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
 
-            first_name VARCHAR(30),
+      first_name VARCHAR(30),
 
-            last_name VARCHAR(30),
+      last_name VARCHAR(30),
 
-            avatar VARCHAR(250),
+      avatar VARCHAR(250),
 
-            email VARCHAR(50) NOT NULL UNIQUE,
+      email VARCHAR(50) NOT NULL UNIQUE,
 
-            password VARCHAR NOT NULL,
+      password VARCHAR NOT NULL,
 
-            is_staff BOOLEAN DEFAULT FALSE,
+      is_staff BOOLEAN DEFAULT FALSE,
 
-            is_active BOOLEAN DEFAULT TRUE
-
-                  );
-
-  `,
-
-  );
+      is_active BOOLEAN DEFAULT TRUE
+    )
+  `
+  )
 }
+
+/*
+id SERIAL PRIMARY KEY
+ created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+
+updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+
+first_name VARCHAR(30),
+
+last_name VARCHAR(30),
+
+avatar VARCHAR(250),
+
+email VARCHAR(50) NOT NULL UNIQUE,
+
+password VARCHAR NOT NULL,
+
+is_staff BOOLEAN DEFAULT FALSE,
+
+is_active BOOLEAN DEFAULT TRUE */
 
 exports.down = pgm => {
   pgm.sql(`
