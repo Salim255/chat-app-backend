@@ -4,7 +4,7 @@ exports.shorthands = undefined
 
 exports.up = pgm => {
   pgm.sql(`
-    CREATE TABLE message (
+    CREATE TABLE messages (
         id SERIAL PRIMARY KEY,
 
         created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
@@ -15,7 +15,7 @@ exports.up = pgm => {
 
         from_user_id INTEGER,
 
-        chat_id INTEGER NOT NULL REFERENCES chat(id) ON DELETE CASCADE
+        chat_id INTEGER NOT NULL REFERENCES chats(id) ON DELETE CASCADE
     );
 `)
 }
