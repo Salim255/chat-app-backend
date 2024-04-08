@@ -29,3 +29,44 @@ exports.signup = async (req, res) => {
     }
   })
 }
+
+exports.login = async (req, res, next) => {
+  const { email, password } = req.body
+
+  if (!validator.isEmail(email) || (!password || password.trim().length === 0)) {
+    return res.status(401).json({
+      status: 'error'
+    })
+  }
+
+  // Get the current user
+  const user = await userModel.getUser({ email, password })
+
+  // Check user exist
+  if (!user) {
+    return res.status(401)
+      .json({
+        status: 'error',
+        data: 'error'
+      })
+  }
+
+  // Check user password
+  const passwordIsCorrect = await passwordHandler.correctPassword(password, user.password)
+
+  if (!passwordIsCorrect) {
+    return res.status(401)
+      .json({
+        status: 'failed',
+        message: 'Incorrect email or password'
+      })
+  }
+  // Prepare token's detail
+  const token = await tokenHandler.createToken(user.id)
+  const tokenDetails = await tokenHandler.tokenExpiration(token)
+
+  res.status(200).json({
+    status: 'success',
+    data: { token, id: tokenDetails.id, expireIn: tokenDetails.exp }
+  })
+}

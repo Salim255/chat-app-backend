@@ -12,6 +12,16 @@ class User {
     return rows[0]
   }
 
+  static async getUser (data) {
+    const { rows } = await pool.query(`
+    SELECT * FROM users
+      WHERE
+        email = $1 ;
+    `, [data.email])
+
+    return rows[0]
+  }
+
   static async counter () {
     const { rows } = await pool.query(`
         SELECT COUNT(*) FROM users ;

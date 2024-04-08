@@ -39,13 +39,15 @@ describe('User test handler', () => {
 
   it('User login', async () => {
     let userId
+
     await request(buildAPP())
-      .post('api/v1/users/login')
-      .send({ email: userData.email, password: userData.password })
+      .post('/api/v1/users/login')
+      .send(userData)
       .expect(200)
       .then(response => {
-        userId = response.body.id
+        userId = response.body.data.id
       })
+
     expect(userId).toEqual(1)
   })
 })
