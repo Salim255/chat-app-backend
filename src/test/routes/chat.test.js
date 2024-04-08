@@ -1,0 +1,59 @@
+const request = require('supertest')
+
+const buildAPP = require('../../app')
+
+const userController = require('../../controllers/userController')
+const chatController = require('../../controllers/chatController')
+const Context = require('../context')
+
+let context
+
+beforeAll(async () => {
+  context = await Context.build()
+})
+
+afterAll(() => {
+  return context.close()
+})
+
+const userData = {
+  first_name: 'salim',
+  last_name: 'hassan',
+  email: 'a@gmail.com',
+  password: 'z'
+}
+
+describe('Chat test handler', () => {
+  it('User sign up user1', async () => {
+    const startCount = await userController.counter()
+
+    await request(buildAPP())
+      .post('/api/v1/users/signup')
+      .send(userData)
+      .expect(200)
+      .then(response => {
+        userId = response.body.data.id
+        token = response.body.data.token
+      })
+    const finishCount = await userController.counter()
+    expect(finishCount - startCount).toEqual(1)
+  })
+  it('Create chat', async () => {
+    const startCount = await chatController.counter()
+    await request(buildAPP())
+      .post('api/v1/chats')
+      .send(chatData)
+      .expect(200)
+      .then(response => {
+        console.log(response.body);
+      })
+    const endCount = await chatController.counter()
+    expect(endCount - startCount).toEqual(1)
+  })
+/*   it('User sign up user2', async () => {
+    await request(buildAPP())
+      .post('/api/v1/users/signup')
+      .send(userData)
+      .expect(200)
+  }) */
+})
