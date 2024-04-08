@@ -7,7 +7,7 @@ const chatController = require('../../controllers/chatController')
 const Context = require('../context')
 
 let context
-
+let token
 beforeAll(async () => {
   context = await Context.build()
 })
@@ -38,11 +38,13 @@ describe('Chat test handler', () => {
     const finishCount = await userController.counter()
     expect(finishCount - startCount).toEqual(1)
   })
+
   it('Create chat', async () => {
     const startCount = await chatController.counter()
     await request(buildAPP())
-      .post('api/v1/chats')
-      .send(chatData)
+      .post('/api/v1/chats')
+      .send()
+      .set('Authorization', `Bearer ${token}`)
       .expect(200)
       .then(response => {
         console.log(response.body);
