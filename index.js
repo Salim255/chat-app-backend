@@ -8,7 +8,7 @@ const connectionOptions = require('./src/config/connection')
 const PORT = appConfig.app_port || 4003
 
 pool.connect(connectionOptions).then(() => {
-  app.listen(PORT, () => {
+  app().listen(PORT, () => {
     console.log('App running on port', PORT)
   })
 }).catch((err) => {

@@ -16,28 +16,36 @@ afterAll(() => {
   return context.close()
 })
 
+const userData = {
+  first_name: 'salim',
+  last_name: 'hassan',
+  email: 'a@gmail.com',
+  password: 'z'
+}
+
 describe('User test handler', () => {
   it('User sign up', async () => {
-    const userData = {
-      first_name: 'salim',
-      last_name: 'hassan',
-      email: 'a@gmail.com',
-      password: 'z'
-    }
-
     const startCount = await userController.counter()
 
     await request(buildAPP())
       .post('/api/v1/users/signup')
       .send(userData)
       .expect(200)
-      .then(response => {
-        // createdUserId = response.body.data.id
-        // token = response.body.data.token
-      })
 
     const finishCount = await userController.counter()
 
     expect(finishCount - startCount).toEqual(1)
+  })
+
+  it('User login', async () => {
+    let userId
+    await request(buildAPP())
+      .post('api/v1/users/login')
+      .send({ email: userData.email, password: userData.password })
+      .expect(200)
+      .then(response => {
+        userId = response.body.id
+      })
+    expect(userId).toEqual(1)
   })
 })
