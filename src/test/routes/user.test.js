@@ -4,10 +4,10 @@ const buildAPP = require('../../app')
 
 const userController = require('../../controllers/userController')
 
-const Context = require('..//context')
+const Context = require('../context')
 
 let context
-
+let token
 beforeAll(async () => {
   context = await Context.build()
 })
@@ -23,7 +23,7 @@ const userData = {
   password: 'z'
 }
 
-describe('User test handler', () => {
+describe('User authentication & authorization test handler', () => {
   it('User sign up', async () => {
     const startCount = await userController.counter()
 
@@ -43,6 +43,21 @@ describe('User test handler', () => {
     await request(buildAPP())
       .post('/api/v1/users/login')
       .send(userData)
+      .expect(200)
+      .then(response => {
+        userId = response.body.data.id
+        token = response.body.data.token
+      })
+
+    expect(userId).toEqual(1)
+  })
+
+  it('Fetch user info with token', async () => {
+    let userId
+
+    await request(buildAPP())
+      .get('/api/v1/users')
+      .set('Authorization', `Bearer ${token}`)
       .expect(200)
       .then(response => {
         userId = response.body.data.id

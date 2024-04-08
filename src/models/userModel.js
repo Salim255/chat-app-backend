@@ -12,6 +12,14 @@ class User {
     return rows[0]
   }
 
+  static async getUserById (userId) {
+    const { rows } = await pool.query(`
+        SELECT * FROM users WHERE id = $1 ;
+    `, [userId])
+
+    return rows[0]
+  }
+
   static async getUser (data) {
     const { rows } = await pool.query(`
     SELECT * FROM users
