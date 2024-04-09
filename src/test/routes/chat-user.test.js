@@ -4,6 +4,7 @@ const buildAPP = require('../../app')
 
 const userController = require('../../controllers/userController')
 const chatController = require('../../controllers/chatController')
+const chatUserController = require('../../controllers/chatUserController')
 const Context = require('../context')
 
 let context
@@ -58,9 +59,6 @@ describe('Chat test handler', () => {
       .send()
       .set('Authorization', `Bearer ${token}`)
       .expect(200)
-      .then(response => {
-        console.log(response.body);
-      })
     const endCount = await chatController.counter()
     expect(endCount - startCount).toEqual(1)
   })
@@ -68,13 +66,11 @@ describe('Chat test handler', () => {
   it('Create chat-user', async () => {
     const startCount = await chatUserController.counter()
     await request(buildAPP())
-      .post('/api/v1/chat-user')
-      .send()
+      .post('/api/v1/chat-users')
+      .send({ usersIdsList: [1, 2], chatId: 1 })
       .set('Authorization', `Bearer ${token}`)
-      .then(response => {
-        console.log(response)
-      })
+
     const endCount = await chatUserController.counter()
-    expect(endCount - startCount).toEqual(1)
+    expect(endCount - startCount).toEqual(2)
   })
 })
