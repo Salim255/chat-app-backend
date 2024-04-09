@@ -1,10 +1,12 @@
 const express = require('express')
 const app = express()
+
 const userRouter = require('../src/views/userRouter')
 const chatRouter = require('./views/chatRouter')
 const chatUserRouter = require('./views/chatUserRouter')
 const messageRouter = require('./views/messageRouter')
 const postRouter = require('./views/postRouter')
+const commentRouter = require('./views/commentRouter')
 
 module.exports = () => {
   app.use(express.json())
@@ -13,5 +15,6 @@ module.exports = () => {
   app.use('/api/v1/chat-users', chatUserRouter)
   app.use('/api/v1/messages', messageRouter)
   app.use('/api/v1/posts', postRouter)
+  app.use('/api/v1/comments', commentRouter)
   return app
 }

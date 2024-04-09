@@ -4,6 +4,7 @@ const Context = require('../context')
 
 const userController = require('../../controllers/userController')
 const postController = require('../../controllers/postController')
+const commentController = require('../../controllers/commentController')
 
 let context
 beforeAll(async () => {
@@ -50,14 +51,14 @@ describe('Comment test handler', () => {
   })
 
   it('Leave a comment on a post ', async () => {
-    const starCount = await postController.counter()
+    const starCount = await commentController.counter()
     await request(buildAPP())
       .post('/api/v1/comments')
       .send({ userId: 1, content: 'All is good to go!', postId: 1 })
       .set('Authorization', `Bearer ${token}`)
       .expect(200)
 
-    const endCount = await postController.counter()
+    const endCount = await commentController.counter()
     expect(endCount - starCount).toEqual(1)
   })
 })
