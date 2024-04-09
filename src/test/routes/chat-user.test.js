@@ -64,4 +64,17 @@ describe('Chat test handler', () => {
     const endCount = await chatController.counter()
     expect(endCount - startCount).toEqual(1)
   })
+
+  it('Create chat-user', async () => {
+    const startCount = await chatUserController.counter()
+    await request(buildAPP())
+      .post('/api/v1/chat-user')
+      .send()
+      .set('Authorization', `Bearer ${token}`)
+      .then(response => {
+        console.log(response)
+      })
+    const endCount = await chatUserController.counter()
+    expect(endCount - startCount).toEqual(1)
+  })
 })
