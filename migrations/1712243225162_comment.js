@@ -13,6 +13,8 @@ exports.up = pgm => {
 
         content VARCHAR(1000),
 
+        post_id INTEGER NOT NULL REFERENCES posts(id) ON DELETE CASCADE,
+
         user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE
     )
     `)
