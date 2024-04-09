@@ -1,9 +1,20 @@
 const request = require('supertest')
-const buildApp = require('../../config/app')
+const buildAPP = require('../../app')
+const userController = require('../../controllers/userController')
+const postController = require('../../controllers/postController')
+
 const Context = require('../context')
 
 let context
 let token
+
+const userData = {
+  first_name: 'salim',
+  last_name: 'hassan',
+  email: 'a@gmail.com',
+  password: 'z'
+}
+
 beforeAll(async () => {
   context = await Context.build()
 })
@@ -28,14 +39,12 @@ describe('Post test handler', () => {
 
   it('Create a post ', async () => {
     const starCount = await postController.counter()
-    await request(buildApp())
+    await request(buildAPP())
       .post('/api/v1/posts')
       .send({ userId: 1, message: 'Hello world' })
       .set('Authorization', `Bearer ${token}`)
       .expect(200)
-      .then(response => {
-        console.log(response);
-      })
+
     const endCount = await postController.counter()
     expect(endCount - starCount).toEqual(1)
   })
