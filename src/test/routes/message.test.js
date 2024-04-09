@@ -1,12 +1,15 @@
 const request = require('supertest')
-
 const buildAPP = require('../../app')
 
 const userController = require('../../controllers/userController')
 const chatController = require('../../controllers/chatController')
+const chatUserController = require('../../controllers/chatUserController')
+const messageController = require('../../controllers/messageController')
+
 const Context = require('../context')
 
 let context
+
 let token
 beforeAll(async () => {
   context = await Context.build()
@@ -23,7 +26,7 @@ const userData = {
   password: 'z'
 }
 
-describe('Chat test handler', () => {
+describe('Message test handler', () => {
   it('User sign up user1', async () => {
     const startCount = await userController.counter()
 
@@ -58,6 +61,29 @@ describe('Chat test handler', () => {
       .set('Authorization', `Bearer ${token}`)
       .expect(200)
     const endCount = await chatController.counter()
+    expect(endCount - startCount).toEqual(1)
+  })
+
+  it('Create chat-user', async () => {
+    const startCount = await chatUserController.counter()
+    await request(buildAPP())
+      .post('/api/v1/chat-users')
+      .send({ usersIdsList: [1, 2], chatId: 1 })
+      .set('Authorization', `Bearer ${token}`)
+
+    const endCount = await chatUserController.counter()
+    expect(endCount - startCount).toEqual(2)
+  })
+
+  it('Create message test', async () => {
+    const startCount = await messageController.counter()
+    await request(buildAPP())
+      .post('/api/v1/messages')
+      .send({ content: 'Hello world', userId: 1, chatId: 1 })
+      .set('Authorization', `Bearer ${token}`)
+
+    const endCount = await messageController.counter()
+
     expect(endCount - startCount).toEqual(1)
   })
 })

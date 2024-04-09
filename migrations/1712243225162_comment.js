@@ -20,6 +20,6 @@ exports.up = pgm => {
 
 exports.down = pgm => {
   pgm.sql(`
-    DROP TABLE comment ;
+    DROP TABLE comments ;
     `)
 }

@@ -22,6 +22,6 @@ exports.up = pgm => {
 
 exports.down = pgm => {
   pgm.sql(`
-        DROP TABLE post;
+        DROP TABLE posts;
     `)
 }

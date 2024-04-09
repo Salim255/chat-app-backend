@@ -52,6 +52,6 @@ is_active BOOLEAN DEFAULT TRUE */
 
 exports.down = pgm => {
   pgm.sql(`
-    DROP TABLE user;
+    DROP TABLE users;
     `)
 }
