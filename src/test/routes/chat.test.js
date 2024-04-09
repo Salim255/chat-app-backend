@@ -32,7 +32,6 @@ describe('Chat test handler', () => {
       .send(userData)
       .expect(200)
       .then(response => {
-        userId = response.body.data.id
         token = response.body.data.token
       })
     const finishCount = await userController.counter()
@@ -58,9 +57,6 @@ describe('Chat test handler', () => {
       .send()
       .set('Authorization', `Bearer ${token}`)
       .expect(200)
-      .then(response => {
-        console.log(response.body);
-      })
     const endCount = await chatController.counter()
     expect(endCount - startCount).toEqual(1)
   })

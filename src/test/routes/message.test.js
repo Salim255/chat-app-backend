@@ -4,6 +4,8 @@ const buildAPP = require('../../app')
 const userController = require('../../controllers/userController')
 const chatController = require('../../controllers/chatController')
 const chatUserController = require('../../controllers/chatUserController')
+const messageController = require('../../controllers/messageController')
+
 const Context = require('../context')
 
 let context
@@ -33,7 +35,6 @@ describe('Message test handler', () => {
       .send(userData)
       .expect(200)
       .then(response => {
-        userId = response.body.data.id
         token = response.body.data.token
       })
     const finishCount = await userController.counter()
@@ -78,7 +79,7 @@ describe('Message test handler', () => {
     const startCount = await messageController.counter()
     await request(buildAPP())
       .post('/api/v1/messages')
-      .send()
+      .send({ content: 'Hello world', userId: 1, chatId: 1 })
       .set('Authorization', `Bearer ${token}`)
 
     const endCount = await messageController.counter()
