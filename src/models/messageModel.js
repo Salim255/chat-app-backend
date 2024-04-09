@@ -3,11 +3,10 @@ const pool = require('../config/pool')
 class Message {
   static async insert (data) {
     const { rows } = await pool.query(`
-        INSERT INTO messages
-                (content, from_user_id, chat_id)
-            VALUES
-                ($1, $2, $3) RETURNING *;
-        `, [data.content, data.userId, data.chat_id])
+        INSERT INTO messages (content, from_user_id, chat_id)
+        VALUES
+            ($1, $2, $3) RETURNING *;
+        `, [data.content, data.userId, data.chatId])
 
     return rows[0]
   }
