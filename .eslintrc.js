@@ -22,7 +22,7 @@ module.exports = {
   rules: {
     // other rules
     'no-undef': 'off', // or 'warn' to show warnings instead of errors,
-    semi: 'off'
-
+    semi: 'off',
+    quotes: ['error', 'single', { allowTemplateLiterals: true }]
   }
 }
