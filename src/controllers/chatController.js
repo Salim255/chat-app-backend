@@ -10,6 +10,15 @@ exports.createChat = async (req, res) => {
     })
 }
 
+exports.getChats = async (req, res, next) => {
+  console.log(req.userId);
+  const result = await chatModel.getChatsByUser(req.userId)
+
+  res.status(200).json({
+    status: 'success',
+    data: result
+  })
+}
 exports.counter = () => {
   return chatModel.counter()
 }

@@ -1,6 +1,7 @@
 const jwt = require('jsonwebtoken')
 const tokenConfig = require('../config/token')
 const { promisify } = require('util')
+
 exports.createToken = (userId) => {
   return jwt.sign({ id: userId }, tokenConfig.JWT, { expiresIn: tokenConfig.EXP })
 }
