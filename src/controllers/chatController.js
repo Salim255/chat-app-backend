@@ -1,13 +1,11 @@
 const chatModel = require('../models/chatModel')
 
-exports.createChat = async (req, res) => {
-  const chat = await chatModel.insert()
+exports.createChat = async (req, res, next) => {
+  const { id: chatId } = await chatModel.insert()
+  req.chatId = chatId
 
-  res.status(200)
-    .json({
-      status: 'success',
-      data: chat
-    })
+  // Next to create userChar
+  next()
 }
 
 exports.getChats = async (req, res, next) => {

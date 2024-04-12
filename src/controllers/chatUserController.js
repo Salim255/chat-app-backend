@@ -5,16 +5,11 @@ exports.counter = async (req, res, next) => {
 }
 
 exports.createChatUser = async (req, res, next) => {
-  const { usersIdsList, chatId } = req.body
+  const { usersIdsList } = req.body
 
-  let result
   for (userId of usersIdsList) {
-    result = await chatUserModel.insert({ userId, chatId })
+    await chatUserModel.insert({ userId, chatId: req.chatId })
   }
-
-  res.status(200).json({
-    status: 'success',
-    data: result
-
-  })
+  // Next create message
+  next()
 }
