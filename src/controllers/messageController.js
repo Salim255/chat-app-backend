@@ -5,8 +5,8 @@ exports.counter = async () => {
 }
 
 exports.sendMessage = async (req, res, next) => {
-  const { content, userId, chatId } = req.body
-  const result = await messageModel.insert({ content, userId, chatId })
+  const { content } = req.body
+  const result = await messageModel.insert({ content, userId: req.userId, chatId: req.chatId })
   res.status(200).json({
     status: 'success',
     data: result
