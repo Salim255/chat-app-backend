@@ -1,7 +1,7 @@
 const pool = require('../config/pool')
 
 class Chat {
-  static async getChatsByUser (userId) {
+  static async getChats (userId) {
     const { rows } = await pool.query(`
     SELECT *,
 
@@ -21,6 +21,35 @@ class Chat {
           ) AS users
     FROM chats c ;
       `)
+
+    return rows
+  }
+
+  static async getChatsByUser (userId) {
+    const { rows } = await pool.query(`
+    SELECT chats.id, chats.type, chats.created_at, chats.updated_at,
+
+    (SELECT jsonb_agg(users) FROM (
+      SELECT * FROM users
+        WHERE id IN (
+          SELECT uc.user_id FROM userChats uc
+            WHERE uc.chat_id = cu.chat_id)
+            ) AS users
+        ) AS users
+    ,
+
+    (SELECT jsonb_agg(messages) FROM (
+      SELECT * FROM messages
+        WHERE chat_id IN (
+          SELECT ms.chat_id FROM messages ms
+            WHERE ms.chat_id = cu.chat_id )
+            )AS messages
+    ) AS messages
+
+    FROM userChats cu
+    JOIN chats ON cu.chat_id = chats.id
+      WHERE cu.user_id = $1
+    `, [userId])
 
     return rows
   }

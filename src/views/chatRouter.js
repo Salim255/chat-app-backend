@@ -5,5 +5,6 @@ const authController = require('../controllers/authController')
 
 router.post('/', authController.protect, chatController.createChat)
 router.get('/', authController.protect, chatController.getChats)
+router.get('/:userId', authController.protect, chatController.getChatsByUser)
 
 module.exports = router
