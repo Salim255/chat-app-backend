@@ -1,10 +1,11 @@
 const chatUserModel = require('../models/chatUserModel')
+const catchAsync = require('../utils/catchAsync')
 
-exports.counter = async (req, res, next) => {
+exports.counter = catchAsync(async (req, res, next) => {
   return await chatUserModel.count()
-}
+})
 
-exports.createChatUser = async (req, res, next) => {
+exports.createChatUser = catchAsync(async (req, res, next) => {
   const { usersIdsList } = req.body
 
   for (userId of usersIdsList) {
@@ -12,4 +13,4 @@ exports.createChatUser = async (req, res, next) => {
   }
   // Next create message
   next()
-}
+})

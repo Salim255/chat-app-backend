@@ -2,8 +2,9 @@ const validator = require('validator')
 const userModel = require('../models/userModel')
 const tokenHandler = require('../utils/authToken')
 const passwordHandler = require('../utils/password')
+const catchAsync = require('../utils/catchAsync')
 
-exports.signup = async (req, res) => {
+exports.signup = catchAsync(async (req, res, next) => {
   const { email, password, first_name: firstName, last_name: lastName } = req.body
 
   if (!validator.isEmail(email) || (!password || password.trim().length === 0)) {
@@ -28,9 +29,9 @@ exports.signup = async (req, res) => {
       expiresIn: tokenDetails.exp
     }
   })
-}
+})
 
-exports.login = async (req, res, next) => {
+exports.login = catchAsync(async (req, res, next) => {
   const { email, password } = req.body
 
   if (!validator.isEmail(email) || (!password || password.trim().length === 0)) {
@@ -69,9 +70,9 @@ exports.login = async (req, res, next) => {
     status: 'success',
     data: { token, id: tokenDetails.id, expireIn: tokenDetails.exp }
   })
-}
+})
 
-exports.protect = async (req, res, next) => {
+exports.protect = catchAsync(async (req, res, next) => {
   // 1 Get token
   let token
 
@@ -104,4 +105,4 @@ exports.protect = async (req, res, next) => {
   req.userId = decoded.id
 
   next()
-}
+})
