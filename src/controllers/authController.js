@@ -3,14 +3,13 @@ const userModel = require('../models/userModel')
 const tokenHandler = require('../utils/authToken')
 const passwordHandler = require('../utils/password')
 const catchAsync = require('../utils/catchAsync')
+const AppError = require('../utils/appError')
 
 exports.signup = catchAsync(async (req, res, next) => {
   const { email, password, first_name: firstName, last_name: lastName } = req.body
 
   if (!validator.isEmail(email) || (!password || password.trim().length === 0)) {
-    return res.status(401).json({
-      status: 'error'
-    })
+    return next(new AppError('Invalid user information', 400))
   }
 
   const hashedPassword = await passwordHandler.hashedPassword(password)
@@ -35,9 +34,7 @@ exports.login = catchAsync(async (req, res, next) => {
   const { email, password } = req.body
 
   if (!validator.isEmail(email) || (!password || password.trim().length === 0)) {
-    return res.status(401).json({
-      status: 'error'
-    })
+    return next(new AppError('Incorrect email or password', 401))
   }
 
   // Get the current user
@@ -45,22 +42,14 @@ exports.login = catchAsync(async (req, res, next) => {
 
   // Check user exist
   if (!user) {
-    return res.status(401)
-      .json({
-        status: 'error',
-        data: 'error'
-      })
+    return next(new AppError('User not found. Please check your information', 404))
   }
 
   // Check user password
   const passwordIsCorrect = await passwordHandler.correctPassword(password, user.password)
 
   if (!passwordIsCorrect) {
-    return res.status(401)
-      .json({
-        status: 'failed',
-        message: 'Incorrect email or password'
-      })
+    return next(new AppError('Incorrect email or password', 401))
   }
   // Prepare token's detail
   const token = tokenHandler.createToken(user.id)
@@ -81,11 +70,7 @@ exports.protect = catchAsync(async (req, res, next) => {
   }
 
   if (!token) {
-    return res.status(401)
-      .json({
-        status: 'failed',
-        message: 'token'
-      })
+    return next(new AppError('Invalid or missing token. Please provide a valid token', 401))
   }
 
   // 2 Verification token
@@ -94,11 +79,7 @@ exports.protect = catchAsync(async (req, res, next) => {
   // 3 Check if user still exist
   const user = await userModel.getUserById(decoded.id)
   if (!user) {
-    return res.status(401)
-      .json({
-        status: 'failed',
-        message: 'error'
-      })
+    return next(new AppError('User not found. Please check your information', 404))
   }
 
   // 4 Set user Id in req
