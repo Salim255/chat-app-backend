@@ -54,6 +54,35 @@ class Chat {
     return rows
   }
 
+  static async getChatByChatId (data) {
+    console.log(data);
+    const { rows } = await pool.query(`
+    SELECT chats.id, chats.type, chats.created_at, chats.updated_at,
+    (SELECT jsonb_agg(users) FROM (
+      SELECT * FROM users
+        WHERE id IN (
+          SELECT uc.user_id FROM userChats uc
+            WHERE uc.chat_id = cu.chat_id)
+            ) AS users
+        ) AS users
+    ,
+
+    (SELECT jsonb_agg(messages) FROM (
+      SELECT * FROM messages
+        WHERE chat_id IN (
+          SELECT ms.chat_id FROM messages ms
+            WHERE ms.chat_id = cu.chat_id )
+            )AS messages
+    ) AS messages
+
+    FROM userChats cu
+    JOIN chats ON cu.chat_id = chats.id
+      WHERE cu.user_id = $1 AND chats.id = $2
+    `, [data.userId, data.chatId])
+
+    return rows
+  }
+
   static async counter () {
     const { rows } = await pool.query(`
     SELECT COUNT(*) FROM chats ;

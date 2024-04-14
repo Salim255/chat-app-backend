@@ -6,9 +6,9 @@ const catchAsync = require('../utils/catchAsync')
 const AppError = require('../utils/appError')
 
 exports.signup = catchAsync(async (req, res, next) => {
-  const { email, password, first_name: firstName, last_name: lastName } = req.body
+  const { email, password, first_name: firstName, last_name: lastName, confirm_password: confirmPassword } = req.body
 
-  if (!validator.isEmail(email) || (!password || password.trim().length === 0)) {
+  if (!validator.isEmail(email) || (!password || password.trim().length === 0) || (password !== confirmPassword)) {
     return next(new AppError('Invalid user information', 400))
   }
 
