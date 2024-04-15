@@ -6,7 +6,8 @@
   "scripts": {
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "start": "npm run migrate-up && nodemon index.js",
+    "start": "npm run migrate-up && NODE_ENV=development nodemon index.js",
+    "start:prod": "npm run migrate-up && NODE_ENV=production node index.js",
     "test": "jest",
     "migrate": "node-pg-migrate",
     "migrate-up": "node-pg-migrate up",
@@ -28,6 +29,7 @@
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
     "jsonwebtoken": "^9.0.2",
+    "morgan": "^1.10.0",
     "node-pg-migrate": "^6.2.2",
     "pg": "^8.11.4",
     "pg-format": "^1.0.4",
