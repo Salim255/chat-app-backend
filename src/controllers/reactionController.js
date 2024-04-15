@@ -1,10 +1,11 @@
 const reactionModel = require('../models/reactionModel')
+const catchAsync = require('../utils/catchAsync')
 
-exports.counter = async (req, res, next) => {
+exports.counter = catchAsync(async (req, res, next) => {
   return await reactionModel.count()
-}
+})
 
-exports.createPostReaction = async (req, res, next) => {
+exports.createPostReaction = catchAsync(async (req, res, next) => {
   const { postId, userId } = req.body
   const result = await reactionModel.insert({ postId, type: 'post', userId })
 
@@ -12,9 +13,9 @@ exports.createPostReaction = async (req, res, next) => {
     status: 'success',
     data: result
   })
-}
+})
 
-exports.deletePostReaction = async (req, res, next) => {
+exports.deletePostReaction = catchAsync(async (req, res, next) => {
   const { postId } = req.params
 
   const result = await reactionModel.deletePostReaction({ userId: req.userId, postId })
@@ -22,4 +23,4 @@ exports.deletePostReaction = async (req, res, next) => {
     status: 'success',
     data: result
   })
-}
+})

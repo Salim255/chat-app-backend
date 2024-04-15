@@ -1,24 +1,32 @@
 const chatModel = require('../models/chatModel')
+const catchAsync = require('../utils/catchAsync')
 
-exports.createChat = async (req, res) => {
-  const chat = await chatModel.insert()
+exports.createChat = catchAsync(async (req, res, next) => {
+  const { id: chatId } = await chatModel.insert()
+  req.chatId = chatId
 
-  res.status(200)
-    .json({
-      status: 'success',
-      data: chat
-    })
-}
+  // Next to create userChar
+  next()
+})
 
-exports.getChats = async (req, res, next) => {
-  console.log(req.userId);
-  const result = await chatModel.getChatsByUser(req.userId)
+exports.getChats = catchAsync(async (req, res, next) => {
+  const result = await chatModel.getChats(req.userId)
 
   res.status(200).json({
     status: 'success',
     data: result
   })
-}
-exports.counter = () => {
-  return chatModel.counter()
-}
+})
+
+exports.getChatsByUser = catchAsync(async (req, res, next) => {
+  const { userId } = req.params
+  const result = await chatModel.getChatsByUser(userId)
+  res.status(200).json({
+    status: 'success',
+    data: result
+  })
+})
+
+exports.counter = catchAsync(async (req, res, next) => {
+  return await chatModel.counter()
+})
