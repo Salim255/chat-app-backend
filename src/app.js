@@ -1,5 +1,7 @@
+const dotenv = require('dotenv')
 const express = require('express')
 const app = express()
+const morgan = require('morgan')
 const AppError = require('./utils/appError')
 const globalErrorHandler = require('./controllers/errorController')
 
@@ -11,8 +13,13 @@ const postRouter = require('./views/postRouter')
 const commentRouter = require('./views/commentRouter')
 const reactionRouter = require('./views/reactionRouter')
 
+dotenv.config({ path: '../.env' })
+
 module.exports = () => {
   app.use(express.json())
+
+  if (process.env.NODE_ENV === 'development') app.use(morgan('dev'))
+
   app.use('/api/v1/users', userRouter)
   app.use('/api/v1/chats', chatRouter)
   app.use('/api/v1/chat-users', chatUserRouter)
