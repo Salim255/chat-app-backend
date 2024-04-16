@@ -2,6 +2,8 @@ const request = require('supertest')
 const buildAPP = require('../../app')
 const Context = require('../context')
 
+const userData = require('../../utils/userData')
+
 const reactionController = require('../../controllers/reactionController')
 const postController = require('../../controllers/postController')
 const userController = require('../../controllers/userController')
@@ -9,12 +11,6 @@ const userController = require('../../controllers/userController')
 let context
 let token
 let postId
-const userData = {
-  first_name: 'salim',
-  last_name: 'hassan',
-  email: 'a@gmail.com',
-  password: 'z'
-}
 
 beforeAll(async () => {
   context = await Context.build()
@@ -29,7 +25,7 @@ describe('Post test handler', () => {
     const startCount = await userController.counter()
     await request(buildAPP())
       .post('/api/v1/users/signup')
-      .send(userData)
+      .send(userData.userData1)
       .expect(200)
       .then(response => {
         token = response.body.data.token

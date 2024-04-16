@@ -9,6 +9,7 @@ class User {
         ($1, $2, $3, $4) RETURNING *;`,
     [data.firstName, data.lastName, data.email, data.hashedPassword]
     )
+
     return rows[0]
   }
 

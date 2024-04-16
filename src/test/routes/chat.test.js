@@ -1,9 +1,10 @@
 const request = require('supertest')
 
 const buildAPP = require('../../app')
-
+const userData = require('../../utils/userData')
 const userController = require('../../controllers/userController')
 const chatController = require('../../controllers/chatController')
+
 const Context = require('../context')
 
 let context
@@ -16,20 +17,13 @@ afterAll(() => {
   return context.close()
 })
 
-const userData = {
-  first_name: 'salim',
-  last_name: 'hassan',
-  email: 'a@gmail.com',
-  password: 'z'
-}
-
 describe('Chat test handler', () => {
   it('User sign up user1', async () => {
     const startCount = await userController.counter()
 
     await request(buildAPP())
       .post('/api/v1/users/signup')
-      .send(userData)
+      .send(userData.userData1)
       .expect(200)
       .then(response => {
         token = response.body.data.token
@@ -41,12 +35,7 @@ describe('Chat test handler', () => {
   it('User sign up user2', async () => {
     await request(buildAPP())
       .post('/api/v1/users/signup')
-      .send({
-        first_name: 'salim',
-        last_name: 'hassan',
-        email: 'b@gmail.com',
-        password: 'z'
-      })
+      .send(userData.userData2)
       .expect(200)
   })
 
@@ -54,7 +43,7 @@ describe('Chat test handler', () => {
     const startCount = await chatController.counter()
     await request(buildAPP())
       .post('/api/v1/chats')
-      .send()
+      .send({ usersIdsList: [1, 2] })
       .set('Authorization', `Bearer ${token}`)
       .expect(200)
     const endCount = await chatController.counter()

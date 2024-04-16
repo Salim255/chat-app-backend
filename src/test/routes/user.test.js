@@ -4,6 +4,8 @@ const buildAPP = require('../../app')
 
 const userController = require('../../controllers/userController')
 
+const userData = require('../../utils/userData')
+
 const Context = require('../context')
 
 let context
@@ -16,20 +18,13 @@ afterAll(() => {
   return context.close()
 })
 
-const userData = {
-  first_name: 'salim',
-  last_name: 'hassan',
-  email: 'a@gmail.com',
-  password: 'z'
-}
-
 describe('User authentication & authorization test handler', () => {
   it('User sign up', async () => {
     const startCount = await userController.counter()
 
     await request(buildAPP())
       .post('/api/v1/users/signup')
-      .send(userData)
+      .send(userData.userData1)
       .expect(200)
 
     const finishCount = await userController.counter()
@@ -42,7 +37,7 @@ describe('User authentication & authorization test handler', () => {
 
     await request(buildAPP())
       .post('/api/v1/users/login')
-      .send(userData)
+      .send(userData.userData1)
       .expect(200)
       .then(response => {
         userId = response.body.data.id
