@@ -55,4 +55,15 @@ describe('Post test handler', () => {
       })
     expect(message === 'Hello Salim').toEqual(true)
   })
+
+  it('Delete post', async () => {
+    const starCount = await postController.counter()
+    await request(buildAPP())
+      .delete('/api/v1/posts/1')
+      .set('Authorization', `Bearer ${token}`)
+      .expect(204)
+
+    const endCount = await postController.counter()
+    expect(endCount - starCount).toEqual(-1)
+  })
 })
