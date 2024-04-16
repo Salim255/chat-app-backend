@@ -1,3 +1,5 @@
+const AppError = require('../utils/appError')
+
 const sendErrorDev = (err, res) => {
   res.status(err.statusCode).json({
     status: err.status,
@@ -28,12 +30,21 @@ const sendErrorProd = (err, res) => {
   }
 }
 
+const handleDuplicateError = (detail) => {
+  const result = detail.split(/[(=)]/)[4]
+  return new AppError(`Duplicate field value: ${result}. Please use another email`, 400)
+}
+
 module.exports = (err, req, res, next) => {
   err.statusCode = err.statusCode || 500
   err.status = err.status || 'error'
   if (process.env.NODE_ENV === 'development') {
     sendErrorDev(err, res)
   } else if (process.env.NODE_ENV === 'production') {
-    sendErrorProd(err, res)
+    let error = { ...err }
+    if (err.code === '23505') {
+      error = handleDuplicateError(err.detail)
+    }
+    sendErrorProd(error, res)
   }
 }
