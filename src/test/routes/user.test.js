@@ -74,7 +74,12 @@ describe('User authentication & authorization test handler', () => {
     expect(userId).toEqual(1)
   })
 
-  it('Disable user', async () => {
-
+  it('Disable user by admin', async () => {
+    await request(buildAPP())
+      .put('/api/v1/users/1/disable')
+      .expect(201)
+      .then(res => {
+        console.log(res.body.data);
+      })
   })
 })
