@@ -50,14 +50,14 @@ describe('User authentication & authorization test handler', () => {
 
     await request(buildAPP())
       .post('/api/v1/users/login')
-      .send(userData.userData1)
+      .send(userData.userData2)
       .expect(200)
       .then(response => {
         userId = response.body.data.id
         token = response.body.data.token
       })
 
-    expect(userId).toEqual(1)
+    expect(userId).toEqual(2)
   })
 
   it('Fetch user info with token', async () => {
@@ -71,15 +71,18 @@ describe('User authentication & authorization test handler', () => {
         userId = response.body.data.id
       })
 
-    expect(userId).toEqual(1)
+    expect(userId).toEqual(2)
   })
 
   it('Disable user by admin', async () => {
+    let isActive = true
     await request(buildAPP())
       .put('/api/v1/users/1/disable')
-      .expect(201)
+      .set('Authorization', `Bearer ${token}`)
+      .expect(200)
       .then(res => {
-        console.log(res.body.data);
+        isActive = res.body.data.is_active
       })
+    expect(isActive).toEqual(false)
   })
 })
