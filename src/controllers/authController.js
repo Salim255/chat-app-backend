@@ -5,7 +5,7 @@ const passwordHandler = require('../utils/password')
 const catchAsync = require('../utils/catchAsync')
 const AppError = require('../utils/appError')
 
-exports.signup = catchAsync(async (req, res, next) => {
+const signup = async (res, req, isStaff = false) => {
   const { email, password, first_name: firstName, last_name: lastName, confirm_password: confirmPassword } = req.body
 
   if (!validator.isEmail(email) || (!password || password.trim().length === 0) || (password !== confirmPassword)) {
@@ -14,8 +14,7 @@ exports.signup = catchAsync(async (req, res, next) => {
 
   const hashedPassword = await passwordHandler.hashedPassword(password)
 
-  const user = await userModel.insert({ email, hashedPassword, firstName, lastName })
-
+  const user = await userModel.insert({ email, hashedPassword, firstName, lastName, isStaff })
   const token = tokenHandler.createToken(user.id)
 
   const tokenDetails = tokenHandler.tokenExpiration(token)
@@ -28,6 +27,14 @@ exports.signup = catchAsync(async (req, res, next) => {
       expiresIn: tokenDetails.exp
     }
   })
+}
+
+exports.createUser = catchAsync(async (req, res, next) => {
+  await signup(res, req)
+})
+
+exports.createAdmin = catchAsync(async (req, res, next) => {
+  await signup(res, req, isStaff = true)
 })
 
 exports.login = catchAsync(async (req, res, next) => {

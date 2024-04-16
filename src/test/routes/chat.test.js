@@ -22,7 +22,7 @@ describe('Chat test handler', () => {
     const startCount = await userController.counter()
 
     await request(buildAPP())
-      .post('/api/v1/users/signup')
+      .post('/api/v1/users/signup/createUser')
       .send(userData.userData1)
       .expect(200)
       .then(response => {
@@ -34,7 +34,7 @@ describe('Chat test handler', () => {
 
   it('User sign up user2', async () => {
     await request(buildAPP())
-      .post('/api/v1/users/signup')
+      .post('/api/v1/users/signup/createUser')
       .send(userData.userData2)
       .expect(200)
   })

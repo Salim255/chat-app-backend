@@ -3,13 +3,12 @@ const pool = require('../config/pool')
 class User {
   static async insert (data) {
     const { rows } = await pool.query(`
-    INSERT INTO users
-        (first_name, last_name, email, password)
-    VALUES
-        ($1, $2, $3, $4) RETURNING *;`,
-    [data.firstName, data.lastName, data.email, data.hashedPassword]
+      INSERT INTO users
+          (first_name, last_name, email, password, is_staff)
+      VALUES
+          ($1, $2, $3, $4, $5) RETURNING *;`,
+    [data.firstName, data.lastName, data.email, data.hashedPassword, data.isStaff]
     )
-
     return rows[0]
   }
 

@@ -21,7 +21,7 @@ describe('Post test handler', () => {
   it('User sign up', async () => {
     const startCount = await userController.counter()
     await request(buildAPP())
-      .post('/api/v1/users/signup')
+      .post('/api/v1/users/signup/createUser')
       .send(userData.userData1)
       .expect(200)
       .then(response => {
