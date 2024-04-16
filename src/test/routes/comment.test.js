@@ -56,16 +56,15 @@ describe('Comment test handler', () => {
   })
 
   it('Update comment', async () => {
-    const comment = 'All is good to go!'
+    let comment = 'All is good to go!'
     await request(buildAPP())
       .put('/api/v1/comments/1')
-      .send({ content: 'All is good to go!'})
+      .send({ content: 'What do you think!' })
       .set('Authorization', `Bearer ${token}`)
       .expect(200)
       .then(res => {
-        console.log('====================================');
-        console.log(res.bo.data);
-        console.log('====================================');
+        comment = res.body.data.content
       })
+    expect(comment === 'What do you think!')
   })
 })
