@@ -1,3 +1,7 @@
+const path = require('path')
+const dotenv = require('dotenv')
+dotenv.config({ path: path.resolve(__dirname, '../../.env') })
+
 const dbConfig = {
   db_host: process.env.DB_HOST,
   db_port: process.env.DB_PORT,

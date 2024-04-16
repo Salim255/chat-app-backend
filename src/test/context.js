@@ -1,4 +1,6 @@
-require('dotenv').config()
+const dotenv = require('dotenv')
+dotenv.config({ path: '/.env' })
+
 const pool = require('../config/pool')
 const { randomBytes } = require('crypto')
 const { default: migrate } = require('node-pg-migrate')
