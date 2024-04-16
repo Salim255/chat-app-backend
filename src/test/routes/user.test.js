@@ -21,10 +21,23 @@ afterAll(() => {
 describe('User authentication & authorization test handler', () => {
   it('User sign up', async () => {
     const startCount = await userController.counter()
+    const data = { ...userData.userData1, is_staff: true }
+    await request(buildAPP())
+      .post('/api/v1/users/signup/createUser')
+      .send(data)
+      .expect(200)
+
+    const finishCount = await userController.counter()
+
+    expect(finishCount - startCount).toEqual(1)
+  })
+
+  it('Sign up user2', async () => {
+    const startCount = await userController.counter()
 
     await request(buildAPP())
-      .post('/api/v1/users/signup')
-      .send(userData.userData1)
+      .post('/api/v1/users/signup/createAdmin')
+      .send(userData.userData2)
       .expect(200)
 
     const finishCount = await userController.counter()
@@ -59,5 +72,9 @@ describe('User authentication & authorization test handler', () => {
       })
 
     expect(userId).toEqual(1)
+  })
+
+  it('Disable user', async () => {
+
   })
 })
