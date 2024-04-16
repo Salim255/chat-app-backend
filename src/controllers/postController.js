@@ -23,3 +23,13 @@ exports.updatePostById = catchAsync(async (req, res, next) => {
     data: result
   })
 })
+
+exports.deletePostById = catchAsync(async (req, res, next) => {
+  const { postId } = req.params
+  const result = await postModel.deletePost(postId)
+
+  res.status(204).json({
+    status: 'success',
+    data: result
+  })
+})
