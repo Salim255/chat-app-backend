@@ -12,3 +12,14 @@ exports.createPost = catchAsync(async (req, res) => {
     data: result
   })
 })
+
+exports.updatePostById = catchAsync(async (req, res, next) => {
+  const { postId } = req.params
+  const { message } = req.body
+
+  const result = await postModel.updatePost({ postId, message })
+  res.status(200).json({
+    status: 'success',
+    data: result
+  })
+})

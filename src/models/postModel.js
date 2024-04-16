@@ -16,6 +16,16 @@ class Post {
         `, [data.message, data.userId])
     return rows[0]
   }
+
+  static async updatePost (data) {
+    const { rows } = await pool.query(`
+        UPDATE posts
+        SET message = $1
+        WHERE posts.id = $2 RETURNING *
+   `, [data.message, data.postId])
+
+    return rows[0]
+  }
 }
 
 module.exports = Post
