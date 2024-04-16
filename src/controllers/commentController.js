@@ -14,3 +14,14 @@ exports.createComment = catchAsync(async (req, res, next) => {
     data: result
   })
 })
+
+exports.updateComment = catchAsync(async (req, res, next) => {
+  const { content } = req.body
+  const { commentId } = req.params
+  const result = await commentModal.updateComment({ content, commentId })
+
+  res.status(200).json({
+    status: 'success',
+    data: result
+  })
+})

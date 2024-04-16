@@ -17,6 +17,16 @@ class Comment {
 
     return rows[0]
   }
+
+  static async updateComment (data) {
+    const { rows } = await pool.query(`
+    UPDATE comments
+    SET content = $1
+    WHERE comments.id = $2 RETURNING *
+    `, [data.content, data.commentId])
+
+    return rows[0]
+  }
 }
 
 module.exports = Comment

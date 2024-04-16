@@ -26,6 +26,15 @@ class Post {
 
     return rows[0]
   }
+
+  static async deletePost (postId) {
+    const { rows } = await pool.query(`
+    DELETE FROM posts
+    WHERE posts.id = $1
+    `, [postId])
+
+    return rows[0]
+  }
 }
 
 module.exports = Post
