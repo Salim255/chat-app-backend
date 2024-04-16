@@ -54,4 +54,18 @@ describe('Comment test handler', () => {
     const endCount = await commentController.counter()
     expect(endCount - starCount).toEqual(1)
   })
+
+  it('Update comment', async () => {
+    const comment = 'All is good to go!'
+    await request(buildAPP())
+      .put('/api/v1/comments/1')
+      .send({ content: 'All is good to go!'})
+      .set('Authorization', `Bearer ${token}`)
+      .expect(200)
+      .then(res => {
+        console.log('====================================');
+        console.log(res.bo.data);
+        console.log('====================================');
+      })
+  })
 })
