@@ -42,4 +42,17 @@ describe('Post test handler', () => {
     const endCount = await postController.counter()
     expect(endCount - starCount).toEqual(1)
   })
+
+  it('Update post', async () => {
+    let message = 'Hello world'
+    await request(buildAPP())
+      .put('/api/v1/posts/1')
+      .send({ message: 'Hello Salim' })
+      .set('Authorization', `Bearer ${token}`)
+      .expect(200)
+      .then(res => {
+        message = res.body.data.message
+      })
+    expect(message === 'Hello Salim').toEqual(true)
+  })
 })

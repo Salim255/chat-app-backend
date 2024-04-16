@@ -37,6 +37,16 @@ class User {
     return rows[0].count
   }
 
+  static async disableUser (userId) {
+    const { rows } = await pool.query(`
+        UPDATE users
+        SET is_active = $1
+        WHERE users.id = $2 RETURNING *;
+    `, [false, userId])
+
+    return rows[0]
+  }
+
   static create () {
     return 1
   }
