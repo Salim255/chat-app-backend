@@ -67,4 +67,17 @@ describe('Comment test handler', () => {
       })
     expect(comment === 'What do you think!')
   })
+
+  it('Delete comment', async () => {
+    const starCount = await commentController.counter()
+
+    await request(buildAPP())
+      .delete('/api/v1/comments/1')
+      .set('Authorization', `Bearer ${token}`)
+      .expect(204)
+
+    const endCount = await commentController.counter()
+
+    expect(endCount - starCount).toEqual(-1)
+  })
 })
