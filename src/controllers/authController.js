@@ -39,7 +39,7 @@ exports.createAdmin = catchAsync(async (req, res, next) => {
 
 exports.login = catchAsync(async (req, res, next) => {
   const { email, password } = req.body
-
+  console.log(req.body);
   if (!validator.isEmail(email) || (!password || password.trim().length === 0)) {
     return next(new AppError('Incorrect email or password', 401))
   }

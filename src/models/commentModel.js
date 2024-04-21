@@ -27,6 +27,15 @@ class Comment {
 
     return rows[0]
   }
+
+  static async deleteComment (commentId) {
+    const { rows } = await pool.query(`
+    DELETE FROM comments
+    WHERE comments.id = $1;
+    `, [commentId])
+
+    return rows[0]
+  }
 }
 
 module.exports = Comment
