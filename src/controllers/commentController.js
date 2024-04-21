@@ -25,3 +25,12 @@ exports.updateComment = catchAsync(async (req, res, next) => {
     data: result
   })
 })
+
+exports.deleteComment = catchAsync(async (req, res, next) => {
+  const { commentId } = req.params
+  const result = await commentModal.deleteComment(commentId)
+  res.status(200).json({
+    status: 'success',
+    data: result
+  })
+})

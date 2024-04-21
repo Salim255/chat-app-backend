@@ -55,7 +55,6 @@ class Chat {
   }
 
   static async getChatByChatId (data) {
-    console.log(data);
     const { rows } = await pool.query(`
     SELECT chats.id, chats.type, chats.created_at, chats.updated_at,
     (SELECT jsonb_agg(users) FROM (
