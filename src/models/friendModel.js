@@ -22,6 +22,16 @@ class Friend {
   static async getNonFriends (data) {
     // const { rows } = await pool.query(``)
   }
+
+  static async count () {
+    console.log('====================================');
+
+    console.log('====================================');
+    const { rows } = await pool.query(`
+        SELECT COUNT(*) FROM users;
+    `)
+    return rows[0].count
+  }
 }
 
 module.exports = Friend

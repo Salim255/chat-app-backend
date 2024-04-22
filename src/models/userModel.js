@@ -30,7 +30,7 @@ class User {
     return rows[0]
   }
 
-  static async counter () {
+  static async count () {
     const { rows } = await pool.query(`
         SELECT COUNT(*) FROM users ;
     `)
