@@ -3,7 +3,7 @@ const AppError = require('../utils/appError')
 const catchAsync = require('../utils/catchAsync')
 
 exports.counter = catchAsync(async (req, res, next) => {
-  const result = await userModel.counter()
+  const result = await userModel.count()
   return result
 })
 

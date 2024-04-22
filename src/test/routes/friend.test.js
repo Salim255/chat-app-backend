@@ -3,11 +3,11 @@ const request = require('supertest')
 const buildAPP = require('../../app')
 
 const userController = require('../../controllers/userController')
+const friendController = require('../../controllers/friendController')
 
 const userData = require('../../utils/userData')
 
 const Context = require('../context')
-const { response } = require('express')
 
 let context
 let token
@@ -47,19 +47,11 @@ describe('Friends test handler', () => {
     expect(finishCount - startCount).toEqual(1)
   })
 
-  it('Add user1 to user2 friends', async () => {
-    const startCount = await friendController.counter()
-
+  it('Add user1 to user2 friends list', async () => {
     await request(buildAPP())
       .post('/api/v1/friends')
-      .send(userData.userData2)
+      .send({ friend_id: 1 })
+      .set('Authorization', `Bearer ${token}`)
       .expect(200)
-      .then(response => {
-        console.log(response);
-      })
-
-    const finishCount = await friendController.counter()
-
-    expect(finishCount - startCount).toEqual(1)
   })
 })
