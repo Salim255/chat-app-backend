@@ -13,10 +13,10 @@ class Friend {
   static async getFriends (userId) {
     const { rows } = await pool.query(`
     SELECT * FROM friends
-    WHERE user_id = $1
+    WHERE user_id = $1 OR friend_id = $1
     `, [userId])
 
-    return rows[0]
+    return rows
   }
 
   static async getNonFriends (data) {
@@ -24,9 +24,6 @@ class Friend {
   }
 
   static async count () {
-    console.log('====================================');
-
-    console.log('====================================');
     const { rows } = await pool.query(`
         SELECT COUNT(*) FROM users;
     `)

@@ -3,7 +3,7 @@ const request = require('supertest')
 const buildAPP = require('../../app')
 
 const userController = require('../../controllers/userController')
-const friendController = require('../../controllers/friendController')
+// const friendController = require('../../controllers/friendController')
 
 const userData = require('../../utils/userData')
 
