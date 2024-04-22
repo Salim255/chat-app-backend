@@ -17,7 +17,11 @@ exports.addFriend = catchAsync(async (req, res, next) => {
 })
 
 exports.getFriends = catchAsync(async (req, res, next) => {
-  return 1
+  const result = await friendModel.getFriends(req.userId)
+  res.status(200).json({
+    status: 'success',
+    data: result
+  })
 })
 
 exports.getNonFriends = catchAsync(async (req, res, next) => {
