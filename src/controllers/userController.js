@@ -22,7 +22,6 @@ exports.disableUser = catchAsync(async (req, res, next) => {
   const user = await userModel.getUserById(userId)
 
   if (!user.is_staff || !user.is_active) {
-    console.log(userToDisableId);
     return next(new AppError('Action not authorized', 401))
   }
 

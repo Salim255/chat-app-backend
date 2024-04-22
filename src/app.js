@@ -13,6 +13,7 @@ const messageRouter = require('./views/messageRouter')
 const postRouter = require('./views/postRouter')
 const commentRouter = require('./views/commentRouter')
 const reactionRouter = require('./views/reactionRouter')
+const friendRouter = require('./views/friendRouter')
 
 dotenv.config({ path: '../.env' })
 
@@ -29,6 +30,7 @@ module.exports = () => {
   app.use('/api/v1/posts', postRouter)
   app.use('/api/v1/comments', commentRouter)
   app.use('/api/v1/reactions', reactionRouter)
+  app.use('/api/v1/friends', friendRouter)
 
   // Error handling
   app.use('*', (req, res, next) => {
