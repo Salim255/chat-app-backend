@@ -61,4 +61,11 @@ describe('Friends test handler', () => {
       .set('Authorization', `Bearer ${token}`)
       .expect(200)
   })
+
+  it('Get all non user friends', async () => {
+    await request(buildAPP())
+      .get('/api/v1/friends/get-non-friends')
+      .set('Authorization', `Bearer ${token}`)
+      .expect(200)
+  })
 })

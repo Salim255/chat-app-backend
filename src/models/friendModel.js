@@ -12,15 +12,25 @@ class Friend {
 
   static async getFriends (userId) {
     const { rows } = await pool.query(`
-    SELECT * FROM friends
-    WHERE user_id = $1 OR friend_id = $1
+    SELECT fr.id,fr.friend_id, fr.created_at, fr.updated_at, us.is_active, us.is_staff, us.first_name, us.last_name, us.email, us.avatar
+    FROM
+        users us
+    JOIN friends fr ON  fr.friend_id = us.id
+    WHERE
+        fr.user_id = $1 OR fr.friend_id = $1
     `, [userId])
 
     return rows
   }
 
-  static async getNonFriends (data) {
-    // const { rows } = await pool.query(``)
+  static async getNonFriends (userId) {
+    const { rows } = await pool.query(`
+    SELECT us.id, us.created_at, us.updated_at, us.is_active, us.is_staff, us.first_name, us.last_name, us.email, us.avatar FROM users us
+    JOIN  friends fr ON  fr.friend_id = us.id
+    WHERE fr.user_id != $1 AND fr.friend_id != $1
+    `, [userId])
+
+    return rows
   }
 
   static async count () {
