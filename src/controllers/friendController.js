@@ -25,5 +25,9 @@ exports.getFriends = catchAsync(async (req, res, next) => {
 })
 
 exports.getNonFriends = catchAsync(async (req, res, next) => {
-  return 1
+  const result = await friendModel.getNonFriends(req.userId)
+  res.status(200).json({
+    status: 'success',
+    data: result
+  })
 })
