@@ -19,8 +19,7 @@ exports.getChats = catchAsync(async (req, res, next) => {
 })
 
 exports.getChatsByUser = catchAsync(async (req, res, next) => {
-  const { userId } = req.params
-  const result = await chatModel.getChatsByUser(userId)
+  const result = await chatModel.getChatsByUser(req.userId)
   res.status(200).json({
     status: 'success',
     data: result

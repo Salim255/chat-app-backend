@@ -12,7 +12,9 @@ exports.up = pgm => {
 
         updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
 
-        friend_id INTEGER,
+        friend_id INTEGER NOT NULL,
+
+        status INTEGER DEFAULT 2,
 
         user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE
       )

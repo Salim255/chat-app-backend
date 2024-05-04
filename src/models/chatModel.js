@@ -30,8 +30,8 @@ class Chat {
     SELECT chats.id, chats.type, chats.created_at, chats.updated_at,
 
     (SELECT jsonb_agg(users) FROM (
-      SELECT * FROM users
-        WHERE id IN (
+      SELECT u.id AS user_id, u.avatar, u.last_name , u.first_name FROM users u
+        WHERE u.id IN (
           SELECT uc.user_id FROM userChats uc
             WHERE uc.chat_id = cu.chat_id)
             ) AS users
@@ -50,7 +50,6 @@ class Chat {
     JOIN chats ON cu.chat_id = chats.id
       WHERE cu.user_id = $1
     `, [userId])
-
     return rows
   }
 

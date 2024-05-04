@@ -6,9 +6,10 @@ exports.counter = catchAsync(async (req, res, next) => {
 })
 
 exports.createChatUser = catchAsync(async (req, res, next) => {
-  const { usersIdsList } = req.body
+  const { partnerId } = req.body;
+  const partnerList = [req.userId, partnerId];
 
-  for (userId of usersIdsList) {
+  for (userId of partnerList) {
     await chatUserModel.insert({ userId, chatId: req.chatId })
   }
   // Next create message

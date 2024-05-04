@@ -17,14 +17,14 @@ const signup = async (res, req, isStaff = false) => {
   const user = await userModel.insert({ email, hashedPassword, firstName, lastName, isStaff })
   const token = tokenHandler.createToken(user.id)
 
-  const tokenDetails = tokenHandler.tokenExpiration(token)
+  const tokenDetails = tokenHandler.tokenExpiration(token);
 
   res.status(200).json({
     status: 'success',
     data: {
       token,
       id: tokenDetails.id,
-      expiresIn: tokenDetails.exp
+      expireIn: tokenDetails.exp
     }
   })
 }
