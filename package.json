@@ -34,6 +34,7 @@
     "node-pg-migrate": "^6.2.2",
     "pg": "^8.11.4",
     "pg-format": "^1.0.4",
+    "socket.io": "^4.7.5",
     "validator": "^13.11.0"
   },
   "eslintIgnore": [
