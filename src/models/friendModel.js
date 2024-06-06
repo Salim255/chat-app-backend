@@ -2,9 +2,6 @@ const pool = require('../config/pool')
 
 class Friend {
   static async insert (data) {
-    console.log('====================================');
-    console.log(data);
-    console.log('====================================');
     const { rows } = await pool.query(`
     INSERT INTO friends (friend_id, user_id)
     VALUES ($1, $2) RETURNING *;
@@ -15,8 +12,7 @@ class Friend {
 
   static async getFriends (userId) {
     const { rows } = await pool.query(`
-    SELECT fr.id, fr.created_at, fr.updated_at, fr.friend_id, fr.user_id,
-      fr.status, u.avatar, u.last_name, u.first_name
+    SELECT fr.id, fr.created_at, fr.updated_at, fr.friend_id, fr.user_id, u.avatar, u.last_name, u.first_name, u.is_staff
     FROM users u
     LEFT JOIN friends fr ON fr.user_id = u.id OR  fr.friend_id = u.id
       WHERE (fr.user_id = $1 OR  fr.friend_id = $1) AND u.id <> $1  AND fr.status = 2;
@@ -27,7 +23,7 @@ class Friend {
 
   static async getNonFriends (userId) {
     const { rows } = await pool.query(`
-    SELECT u.id, u.created_at, u.updated_at, u.first_name, u.last_name, u.avatar, u.is_active
+    SELECT u.id, u.created_at, u.updated_at, u.first_name, u.last_name, u.avatar, u.is_staff
       FROM users u
       LEFT JOIN ( SELECT fr.id, fr.created_at, fr.updated_at, fr.friend_id, fr.user_id,
         fr.status, u.avatar, u.last_name, u.first_name

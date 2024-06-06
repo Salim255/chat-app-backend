@@ -26,6 +26,17 @@ exports.getChatsByUser = catchAsync(async (req, res, next) => {
   })
 })
 
+exports.getChatByUsersIds = catchAsync(async (req, res, next) => {
+  const { partnerId } = req.params
+  const data = { userId1: req.userId, userId2: partnerId * 1 }
+
+  const result = await chatModel.getChatByUsersIds(data)
+  res.status(200).json({
+    status: 'success',
+    data: result
+  })
+})
+
 exports.counter = catchAsync(async (req, res, next) => {
   return await chatModel.counter()
 })
