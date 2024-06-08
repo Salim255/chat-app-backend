@@ -18,7 +18,14 @@ const friendRouter = require('./views/friendRouter')
 dotenv.config({ path: '../.env' })
 
 module.exports = () => {
-  app.use(cors())
+  const corsOptions = {
+    origin: 'http://localhost:8100',
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true
+  };
+  app.use(cors(corsOptions));
+
   app.use(express.json())
 
   if (process.env.NODE_ENV === 'development') app.use(morgan('dev'))

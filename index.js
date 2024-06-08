@@ -4,7 +4,7 @@ const appConfig = require('./src/config/app')
 const app = require('./src/app')
 const pool = require('./src/config/pool')
 const connectionOptions = require('./src/config/connection')
-const socketio = require('socket.io');
+const socketServer = require('./src/sockets/socketServer')
 
 process.on('uncaughtException', (err) => {
   console.log('UNHANDLED EXCEPTION! 💥 Shutting down...')
@@ -22,10 +22,15 @@ const server = app().listen(PORT, () => {
   console.log('App running on port', PORT)
 })
 
-const io = socketio(server);
-io.on('connect', (socket) => {
-  console.log('Connection with success', socket);
-})
+// Socket section
+const options = {
+  origin: 'http://localhost:8100',
+  methods: ['GET', 'POST'],
+  allowedHeaders: ['Content-Type'],
+  credentials: true
+};
+
+socketServer(server, options)
 
 process.on('unhandledRejection', (err) => {
   console.log('UNHANDLED REJECTION! 💥 Shutting down...')
