@@ -17,14 +17,14 @@ const signup = async (res, req, isStaff = false) => {
   const user = await userModel.insert({ email, hashedPassword, firstName, lastName, isStaff })
   const token = tokenHandler.createToken(user.id)
 
-  const tokenDetails = tokenHandler.tokenExpiration(token)
+  const tokenDetails = tokenHandler.tokenExpiration(token);
 
   res.status(200).json({
     status: 'success',
     data: {
       token,
       id: tokenDetails.id,
-      expiresIn: tokenDetails.exp
+      expireIn: tokenDetails.exp
     }
   })
 }
@@ -39,7 +39,6 @@ exports.createAdmin = catchAsync(async (req, res, next) => {
 
 exports.login = catchAsync(async (req, res, next) => {
   const { email, password } = req.body
-
   if (!validator.isEmail(email) || (!password || password.trim().length === 0)) {
     return next(new AppError('Incorrect email or password', 401))
   }

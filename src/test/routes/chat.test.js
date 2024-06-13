@@ -43,7 +43,7 @@ describe('Chat test handler', () => {
     const startCount = await chatController.counter()
     await request(buildAPP())
       .post('/api/v1/chats')
-      .send({ usersIdsList: [1, 2] })
+      .send({ partnerId: 2 })
       .set('Authorization', `Bearer ${token}`)
       .expect(200)
     const endCount = await chatController.counter()

@@ -3,7 +3,7 @@ const AppError = require('../utils/appError')
 const catchAsync = require('../utils/catchAsync')
 
 exports.counter = catchAsync(async (req, res, next) => {
-  const result = await userModel.counter()
+  const result = await userModel.count()
   return result
 })
 
@@ -22,7 +22,6 @@ exports.disableUser = catchAsync(async (req, res, next) => {
   const user = await userModel.getUserById(userId)
 
   if (!user.is_staff || !user.is_active) {
-    console.log(userToDisableId);
     return next(new AppError('Action not authorized', 401))
   }
 

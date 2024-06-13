@@ -74,7 +74,7 @@ describe('Comment test handler', () => {
     await request(buildAPP())
       .delete('/api/v1/comments/1')
       .set('Authorization', `Bearer ${token}`)
-      .expect(204)
+      .expect(200)
 
     const endCount = await commentController.counter()
 

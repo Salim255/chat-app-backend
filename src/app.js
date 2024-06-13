@@ -1,6 +1,7 @@
 const dotenv = require('dotenv')
 const express = require('express')
 const app = express()
+const cors = require('cors')
 const morgan = require('morgan')
 const AppError = require('./utils/appError')
 const globalErrorHandler = require('./controllers/errorController')
@@ -12,10 +13,19 @@ const messageRouter = require('./views/messageRouter')
 const postRouter = require('./views/postRouter')
 const commentRouter = require('./views/commentRouter')
 const reactionRouter = require('./views/reactionRouter')
+const friendRouter = require('./views/friendRouter')
 
 dotenv.config({ path: '../.env' })
 
 module.exports = () => {
+  const corsOptions = {
+    origin: 'http://localhost:8100',
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true
+  };
+  app.use(cors(corsOptions));
+
   app.use(express.json())
 
   if (process.env.NODE_ENV === 'development') app.use(morgan('dev'))
@@ -27,6 +37,7 @@ module.exports = () => {
   app.use('/api/v1/posts', postRouter)
   app.use('/api/v1/comments', commentRouter)
   app.use('/api/v1/reactions', reactionRouter)
+  app.use('/api/v1/friends', friendRouter)
 
   // Error handling
   app.use('*', (req, res, next) => {
