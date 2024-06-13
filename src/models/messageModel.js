@@ -18,6 +18,16 @@ class Message {
 
     return rows[0].count
   }
+
+  static async updateChatMessagesStatusToDelivered (chatId) {
+    const { rows } = await pool.query(`
+    UPDATE messages
+      SET status = 'delivered'
+        WHERE chat_id = $1 AND status = 'sent'
+    `, [chatId])
+
+    return rows[0]
+  }
 }
 
 module.exports = Message

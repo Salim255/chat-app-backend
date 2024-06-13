@@ -29,3 +29,13 @@ exports.sendMessage = catchAsync(async (req, res, next) => {
     data: chat
   })
 })
+
+exports.updateChatMessagesStatusToDelivered = catchAsync(async (req, res, next) => {
+  const { chatId } = req.params;
+  const result = await messageModel.updateChatMessagesStatusToDelivered(chatId)
+
+  res.status(200).join({
+    status: 'success',
+    data: result
+  })
+})
