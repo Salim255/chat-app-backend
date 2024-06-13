@@ -15,6 +15,8 @@ exports.up = pgm => {
 
         from_user_id INTEGER,
 
+        status VARCHAR(25) DEFAULT 'sent',
+
         chat_id INTEGER NOT NULL REFERENCES chats(id) ON DELETE CASCADE
     );
 `)
