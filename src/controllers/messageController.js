@@ -30,21 +30,13 @@ exports.sendMessage = catchAsync(async (req, res, next) => {
   })
 })
 
-exports.updateChatMessagesStatusToDelivered = catchAsync(async (req, res, next) => {
-  const { chatId } = req.params;
-  const result = await messageModel.updateChatMessagesStatusToDelivered(chatId)
+exports.updateChatMessagesStatus = catchAsync(async (req, res, next) => {
+  const { chatId, status } = req.params;
+  const userId = req.userId;
+  const result = (status === 'read' ? await messageModel.updateChatMessagesStatusToRead({ chatId, userId }) : await messageModel.updateChatMessagesStatusToDelivered({ chatId, userId }))
 
-  res.status(200).join({
-    status: 'success',
-    data: result
-  })
-})
-
-exports.updateChatMessagesStatusToRead = catchAsync(async (req, res, next) => {
-  const { chatId } = req.params;
-  const result = await messageModel.updateChatMessagesStatusToRead(chatId)
-
-  res.status(200).join({
+  console.log(result, 'Hello result', chatId, status, userId);
+  res.status(200).json({
     status: 'success',
     data: result
   })

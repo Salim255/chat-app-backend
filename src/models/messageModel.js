@@ -19,23 +19,23 @@ class Message {
     return rows[0].count
   }
 
-  static async updateChatMessagesStatusToDelivered (chatId) {
+  static async updateChatMessagesStatusToDelivered (data) {
     const { rows } = await pool.query(`
     UPDATE messages
       SET status = 'delivered'
-        WHERE chat_id = $1 AND status = 'sent'
-    `, [chatId])
-
+        WHERE chat_id = $1 AND status = 'sent' AND from_user_id != $2
+        RETURNING *;
+    `, [data.chatId, data.userId])
     return rows[0]
   }
 
-  static async updateChatMessagesStatusToRead (chatId) {
+  static async updateChatMessagesStatusToRead (data) {
     const { rows } = await pool.query(`
     UPDATE messages
       SET status = 'read'
-        WHERE chat_id = $1 AND status = 'delivered'
-    `, [chatId])
-
+        WHERE chat_id = $1 AND status = 'delivered' AND from_user_id != $2
+        RETURNING *;
+    `, [data.chatId, data.userId])
     return rows[0]
   }
 }

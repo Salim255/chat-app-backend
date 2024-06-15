@@ -16,9 +16,11 @@ exports.joinNamespace = ({ socket, namespaceSockets, namespaceEndpoint }) => {
     });
 
     nsSocket.on('sentMessage', (data) => {
+      // Send notification to the receiver
       nsSocket.broadcast.emit('emittingSentMessage', {
         socketId: nsSocket.id,
-        partnerId: data.partnerId
+        partnerId: data.partnerId,
+        chatId: data.chatId
       })
     })
   })
