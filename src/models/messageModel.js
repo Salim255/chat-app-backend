@@ -7,7 +7,6 @@ class Message {
         VALUES
             ($1, $2, $3) RETURNING *;
         `, [data.content, data.userId, data.chatId])
-
     return rows[0]
   }
 

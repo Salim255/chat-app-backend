@@ -38,13 +38,11 @@ class Chat {
         ) AS users
     ,
 
-    (SELECT jsonb_agg(messages) FROM (
-      SELECT * FROM messages
-        WHERE chat_id IN (
-          SELECT ms.chat_id FROM messages ms
-            WHERE ms.chat_id = cu.chat_id )
-            )AS messages
-    ) AS messages
+     (SELECT jsonb_agg(messages) FROM (
+    SELECT * FROM messages
+    WHERE chat_id = cu.chat_id
+    ORDER BY created_at ASC
+  ) AS messages) AS messages
 
     FROM userChats cu
     JOIN chats ON cu.chat_id = chats.id
@@ -66,12 +64,10 @@ class Chat {
     ,
 
     (SELECT jsonb_agg(messages) FROM (
-      SELECT * FROM messages
-        WHERE chat_id IN (
-          SELECT ms.chat_id FROM messages ms
-            WHERE ms.chat_id = cu.chat_id )
-            )AS messages
-    ) AS messages
+    SELECT * FROM messages
+    WHERE chat_id = cu.chat_id
+    ORDER BY created_at ASC
+  ) AS messages) AS messages
 
     FROM userChats cu
     JOIN chats ON cu.chat_id = chats.id
@@ -82,9 +78,6 @@ class Chat {
   }
 
   static async getChatByUsersIds (data) {
-    console.log('====================================');
-    console.log(data);
-    console.log('====================================');
     const { rows } = await pool.query(`
     SELECT c.*,
         ( SELECT jsonb_agg(users) FROM (
@@ -99,6 +92,7 @@ class Chat {
         ( SELECT jsonb_agg(messages) FROM (
           SELECT * FROM messages ms
           WHERE ms.chat_id = c.id
+          ORDER BY created_at ASC
         ) AS messages ) AS messages
 
         FROM chats c
