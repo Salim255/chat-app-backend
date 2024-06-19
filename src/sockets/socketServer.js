@@ -9,7 +9,7 @@ module.exports = socketServer = (expressServer) => {
   io.on('connect', (socket) => {
     console.log('A user connected', socket.id);
 
-    // Handle user idnetifcation and message status updates
+    // Handle user identification and message status updates
     socket.on('user_connected', (userId) => {
       console.log('User connect', userId);
       // Check if user is already connected
@@ -19,10 +19,6 @@ module.exports = socketServer = (expressServer) => {
 
         // Join the user to their personal room
         socket.join(userId);
-
-        // Update all messages to 'delivered' for this user
-
-        // Emit 'message_delivered' event for each updated message
       } else {
         connectedUsers.set(userId, socket.id)
       }
@@ -49,20 +45,35 @@ module.exports = socketServer = (expressServer) => {
 
     // Handle message deliver
     socket.on('delivered_message', (data) => {
-      console.log(data, 'Hello from listening');
-      const { toUserId } = data
-      // Emit message_delivered
-      io.to(toUserId).emit('message_delivered', data);
+      const { toUserId, fromUserId } = data
+      // Emit message_delivered modify_message_status
+      io.to(toUserId).emit('message_delivered_with_modify_fetch_messages', data);
+
+      // To the sender
+      io.to(fromUserId).emit('message_delivered_with_fetch_messages', data);
     });
 
     // Handle message read
     socket.on('read_message', (data) => {
       const { toUserId } = data
-      // Emit message_read
-      io.to(toUserId).emit('message_read', data);
+      // Emit message_read to modify message status to read, by the receiver
+      io.to(toUserId).emit('message_read', data)
     })
+
+    socket.on('display_message_read', (data) => {
+      const { fromUserId } = data
+      io.to(fromUserId).emit('display_read_message', data)
+    })
+
     socket.on('disconnect', () => {
       console.log('User disconnected');
+    /*   for (const userId in users) {
+        if (users[userId] === socket.id) {
+          delete users[userId];
+          console.log(`User ${userId} disconnected`);
+          break;
+        }
+      } */
     });
   })
 }
