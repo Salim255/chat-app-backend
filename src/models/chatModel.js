@@ -72,8 +72,7 @@ class Chat {
     FROM userChats cu
     JOIN chats ON cu.chat_id = chats.id
       WHERE cu.user_id = $1 AND chats.id = $2
-    `, [data.userId, data.chatId])
-
+    `, [data.userId, data.chatId]);
     return rows
   }
 

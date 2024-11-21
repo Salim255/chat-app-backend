@@ -11,7 +11,7 @@ module.exports = socketServer = (expressServer) => {
 
     // Handle user identification and message status updates
     socket.on('user_connected', (userId) => {
-      console.log('User connect', userId);
+      socket.emit('mark_coming_messages_as_delivered', userId);
       // Check if user is already connected
       if (!connectedUsers.has(userId)) {
         // Add user to the connected users list
@@ -21,7 +21,10 @@ module.exports = socketServer = (expressServer) => {
         socket.join(userId);
       } else {
         connectedUsers.set(userId, socket.id)
+        socket.join(userId);
       }
+
+      //
     })
 
     // Handle user typing
@@ -35,16 +38,20 @@ module.exports = socketServer = (expressServer) => {
     socket.on('send_message', async (data) => {
       const { toUserId } = data;
 
+      console.log('Log of message been sent');
       // Emit 'message_sent' event to the sender
-      socket.emit('message_sent', data);
+      socket.emit('message_sent', data)
 
       // Emit 'new_message'  event To tell the recipient
       // console.log(toUserId, "Fuc you user");
-      io.to(toUserId).emit('new_message', data);
+      io.to(toUserId).emit('new_message', data)
     });
 
     // Handle message deliver
     socket.on('delivered_message', (data) => {
+      console.log('====================================');
+      console.log(data, 'helllo you');
+      console.log('====================================');
       const { toUserId, fromUserId } = data
       // Emit message_delivered modify_message_status
       io.to(toUserId).emit('message_delivered_with_modify_fetch_messages', data);
