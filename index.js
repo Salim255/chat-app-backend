@@ -12,6 +12,9 @@ process.on('uncaughtException', (err) => {
   process.exit(1)
 })
 
+console.log(`Database port: ${process.env.DB_PORT}`);
+console.log(`Database host: ${process.env.DB_HOST}`);
+console.log(`Database user: ${process.env.DB_USER}`);
 const PORT = appConfig.app_port || 4003
 
 pool.connect(connectionOptions).then(() => {
@@ -19,7 +22,7 @@ pool.connect(connectionOptions).then(() => {
 }).then(() => {
   console.log('DB connection successful!')
 })
-
+ 
 const server = app().listen(PORT, () => {
   console.log('App running on port', PORT)
 })
