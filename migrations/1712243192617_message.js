@@ -15,6 +15,8 @@ exports.up = pgm => {
 
         from_user_id INTEGER,
 
+        to_user_id INTEGER,
+
         status VARCHAR(50) NOT NULL DEFAULT 'sent' CHECK (status IN ('sent', 'delivered', 'read')),
 
         chat_id INTEGER NOT NULL REFERENCES chats(id) ON DELETE CASCADE

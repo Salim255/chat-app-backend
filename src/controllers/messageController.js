@@ -7,22 +7,22 @@ exports.counter = catchAsync(async (req, res, next) => {
 })
 
 exports.firstMessage = catchAsync(async (req, res, next) => {
-  const { content } = req.body
-  await messageModel.insert({ content, userId: req.userId, chatId: req.chatId })
+  const { content, toUserId, fromUserId } = req.body;
 
-  const chat = await chatModel.getChatByChatId({ userId: req.userId, chatId: req.chatId })
+  await messageModel.insert({ content, fromUserId, toUserId, chatId: req.chatId })
 
+  const chat = await chatModel.getChatByChatId({ userId: fromUserId, chatId: req.chatId })
   res.status(200).json({
     status: 'success',
-    data: chat
+    data: chat[0]
   })
 })
 
 exports.sendMessage = catchAsync(async (req, res, next) => {
-  const { content, userId, chatId } = req.body
-  await messageModel.insert({ content, userId: req.userId, chatId })
+  const { content, toUserId, chatId } = req.body
+  await messageModel.insert({ content, fromUserId: req.userId, toUserId, chatId })
 
-  const chat = await chatModel.getChatByChatId({ userId, chatId })
+  const chat = await chatModel.getChatByChatId({ userId: req.userId, chatId })
 
   res.status(200).json({
     status: 'success',
@@ -30,21 +30,24 @@ exports.sendMessage = catchAsync(async (req, res, next) => {
   })
 })
 
-exports.updateChatMessagesStatusToDelivered = catchAsync(async (req, res, next) => {
-  const { chatId } = req.params;
-  const result = await messageModel.updateChatMessagesStatusToDelivered(chatId)
+exports.updateChatMessagesStatus = catchAsync(async (req, res, next) => {
+  const { chatId, status } = req.params;
+  const userId = req.userId;
+  const result = (status === 'read' ? await messageModel.updateChatMessagesStatusToRead({ chatId, userId }) : await messageModel.updateChatMessagesStatusToDelivered({ chatId, userId }))
 
-  res.status(200).join({
+  console.log(result, 'Hello result', chatId, status, userId);
+  res.status(200).json({
     status: 'success',
     data: result
   })
 })
 
-exports.updateChatMessagesStatusToRead = catchAsync(async (req, res, next) => {
-  const { chatId } = req.params;
-  const result = await messageModel.updateChatMessagesStatusToRead(chatId)
+exports.updateMessagesToDeliveredByUser = catchAsync(async (req, res, next) => {
+  const userId = req.userId;
 
-  res.status(200).join({
+  const result = (userId && await messageModel.updateMessagesToDeliveredByUser(userId));
+
+  res.status(200).json({
     status: 'success',
     data: result
   })

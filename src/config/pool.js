@@ -7,7 +7,7 @@ class Pool {
     this._pool = new pg.Pool(option)
     return this._pool.query('SELECT 1 + 1;')
   }
-
+ // 
   close () {
     return this._pool.end()
   }
