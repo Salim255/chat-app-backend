@@ -7,7 +7,7 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "start": "npm run migrate-up && NODE_ENV=development nodemon index.js",
-    "start:prod": "npm run migrate-up && NODE_ENV=production node index.js",
+    "start:prod": "npm run && NODE_ENV=production node index.js",
     "test": "jest",
     "migrate": "node-pg-migrate",
     "migrate-up": "node-pg-migrate up",
