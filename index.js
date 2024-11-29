@@ -46,7 +46,8 @@ const server = app().listen(PORT, () => {
 
 // Socket section
 const options = {
-  origin: 'http://localhost:8100',
+ /*  origin: 'http://localhost:8100', */
+ origin: '*',
   methods: ['GET', 'POST'],
   allowedHeaders: ['Content-Type'],
   credentials: true
