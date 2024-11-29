@@ -14,12 +14,12 @@ process.on('uncaughtException', (err) => {
 
 const PORT = appConfig.app_port || 4003
 
-pool.connect(connectionOptions).then(() => {
+/* pool.connect(connectionOptions).then(() => {
   console.log('DB connection successful!')
 }).then(() => {
   console.log('DB connection successful!')
 })
-
+ */
 const server = app().listen(PORT, () => {
   console.log('App running on port', PORT)
 })
