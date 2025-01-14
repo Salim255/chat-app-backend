@@ -67,6 +67,14 @@ exports.login = catchAsync(async (req, res, next) => {
   })
 })
 
+exports.updateMe = catchAsync(async (req, res, next) => {
+  console.log(req.file, 'here', req.body)
+  res.status(200).json({
+    status: 'success',
+    data: 'Hello from update'
+  })
+})
+
 exports.protect = catchAsync(async (req, res, next) => {
   // 1 Get token
   let token

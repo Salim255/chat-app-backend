@@ -1,5 +1,6 @@
 const dotenv = require('dotenv')
 const express = require('express')
+const bodyParser = require('body-parser')
 const app = express()
 const cors = require('cors')
 const morgan = require('morgan')
@@ -28,6 +29,7 @@ module.exports = () => {
   app.use(cors(corsOptions));
 
   app.use(express.json())
+  app.use(bodyParser.json())
 
   if (process.env.NODE_ENV === 'development') app.use(morgan('dev'))
 
