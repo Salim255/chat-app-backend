@@ -28,6 +28,7 @@ module.exports = () => {
   app.use(cors(corsOptions));
 
   app.use(express.json())
+  
 
   if (process.env.NODE_ENV === 'development') app.use(morgan('dev'))
 
