@@ -9,8 +9,6 @@ const socketServer = require('./src/sockets/socketServer')
 // migrate-up && NODE_ENV=production
 console.log(`Database port: ${process.env.DB_PORT}`);
 console.log(`Database host: ${process.env.DB_HOST}`);
-console.log(`Database user: ${process.env.DB_USER}`);
-console.log(`Database url: ${process.env.DATABASE_URL}`);
 
 process.on('uncaughtException', (err) => {
   console.log('UNHANDLED EXCEPTION! 💥 Shutting down...')
