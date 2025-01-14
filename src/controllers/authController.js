@@ -68,7 +68,22 @@ exports.login = catchAsync(async (req, res, next) => {
 })
 
 exports.updateMe = catchAsync(async (req, res, next) => {
-  console.log(req.file, 'here', req.body)
+  // 1) Create error if user POTS passwords data
+  if (req.body.password || req.body.passwordConfirm) {
+    return next(
+      new AppError('This route is not for password updates. Please /updateMyPassword', 400)
+    )
+  }
+
+  // 2) Filter out unwanted fields names that are not allowed to be updated
+  // const filteredBody = filterObj(req.body, 'name', 'email')
+  /* if (req.file) {
+    filteredBody.photo = req.file;
+  } */
+
+  // 3) Update user document
+  // const updateuser = await user.finduserandupdate
+
   res.status(200).json({
     status: 'success',
     data: 'Hello from update'
