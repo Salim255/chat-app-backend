@@ -4,6 +4,7 @@ const tokenHandler = require('../utils/authToken')
 const passwordHandler = require('../utils/password')
 const catchAsync = require('../utils/catchAsync')
 const AppError = require('../utils/appError')
+const objectFilter = require('../utils/objectFilter')
 
 const signup = async (res, req, isStaff = false) => {
   const { email, password, first_name: firstName, last_name: lastName, confirm_password: confirmPassword } = req.body
@@ -77,17 +78,55 @@ exports.updateMe = catchAsync(async (req, res, next) => {
   }
 
   // 2) Filter out unwanted fields names that are not allowed to be updated
-  // const filteredBody = filterObj(req.body, 'name', 'email')
-  /* if (req.file) {
-    filteredBody.photo = req.file;
-  } */
+  const filteredBody = objectFilter.filterObj(req.body, 'first_name', 'last_name');
+  if (req.file) {
+    filteredBody.avatar = req.file.filename;
+  }
+
+  // 3 Fetch the current user from the database
+  const savedUser = await userModel.getUserById(1);
+  if (!savedUser) {
+    return next(
+      new AppError('User not found', 400)
+    )
+  }
+
+  // 5) Dynamically construct the update query clause
+  const values = [];
+  const fields = [];
+  let query = 'UPDATE users SET ';
+  Object.keys(filteredBody).forEach((key, index) => {
+    // Exclude id key from being updated
+    if (key !== 'id' && filteredBody[key] !== undefined) {
+      fields.push(`${key} = $${index + 1}`);
+      values.push(filteredBody[key])
+    }
+  })
+
+  // If no fields to update, return early
+  if (fields.length === 0) {
+    return res.status(200).json({
+      status: 'success',
+      data: savedUser
+    }) // No changes, return existing data
+  }
+
+  // Build and Add WHERE clause and append ID to the values
+  query += `${fields.join(', ')} WHERE id = $${values.length + 1} RETURNING *;`;
+  values.push(savedUser.id)
 
   // 3) Update user document
-  // const updateuser = await user.finduserandupdate
+  const result = await userModel.updateUser(query, values);
+
+  // Exclude password from the response
+  // Here we structured the password of result then we assigned to a password
+  // The we structured the rest and assigned to new variable responseData
+  // the response to exclude the password field
+  const { email, password, ...responseData } = result;
 
   res.status(200).json({
     status: 'success',
-    data: 'Hello from update'
+    data: responseData
   })
 })
 
