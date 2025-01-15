@@ -23,7 +23,9 @@ exports.uploadToS3Bucket = catchAsync(async (req, res, next) => {
   const uploadParams = {
     Bucket: 'intimacy-s3', // S3 bucket name
     Key: `users/${req.file.filename}`, // The name of the file in S3
-    Body: req.file.buffer // The file content (could also be a buffer or stream)
+    Body: req.file.buffer, // The file content (could also be a buffer or stream)
+    ContentType: req.file.mimetype,
+    ACL: 'public-read'
   };
 
   // Upload to S3
