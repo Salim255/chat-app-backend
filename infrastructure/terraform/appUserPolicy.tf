@@ -9,16 +9,20 @@ resource "aws_iam_policy" "intimacy_user_s3_policy" {
         Action = [
           "s3:PutObject",
           "s3:GetObject",
-          "s3:ListBucket"
+          "s3:ListBucket",
+          "s3:PutObjectAcl"  # Add this to allow modifying ACLs
         ]
         Resource = [
           "arn:aws:s3:::intimacy-s3",
-          "arn:aws:s3:::intimacy-s3/*"
+          "arn:aws:s3:::intimacy-s3/*",
+          "arn:aws:s3:::intimacy-s3/users/*"
         ]
       }
     ]
   })
 }
+
+
 
 # Attach the Policy to the IAM User:
 resource "aws_iam_user_policy_attachment" "intimacy_user_policy_attachment" {
