@@ -68,6 +68,7 @@ exports.login = catchAsync(async (req, res, next) => {
 })
 
 exports.updateMe = catchAsync(async (req, res, next) => {
+  console.log(req.file)
   // 1) Create error if user POTS passwords data
   if (req.body.password || req.body.passwordConfirm) {
     return next(
