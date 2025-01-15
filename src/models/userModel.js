@@ -47,6 +47,13 @@ class User {
     return rows[0]
   }
 
+  static async updateUser (query, values) {
+    console.log(query, values)
+    const { rows } = await pool.query(query, values);
+    return rows[0]
+  }
+
+  static async deleteUser (userId) {}
   static create () {
     return 1
   }
