@@ -2,6 +2,22 @@ const chatModel = require('../models/chatModel')
 const catchAsync = require('../utils/catchAsync')
 
 exports.createChat = catchAsync(async (req, res, next) => {
+  const { toUserId, fromUserId } = req.body;
+
+  if (!toUserId || !fromUserId) {
+    return next(
+      new AppError('Chat need to have two users', 400)
+    )
+  }
+  
+  // Check if the two users are  already chatting
+  const result = await chatModel.getChatByUsersIds({ toUserId, fromUserId })
+  if (result) {
+    return next(
+      new AppError('Users already in chat connection', 400)
+    )
+  }
+  // Create chat
   const { id: chatId } = await chatModel.insert()
   req.chatId = chatId
 
