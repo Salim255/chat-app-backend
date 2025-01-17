@@ -83,7 +83,6 @@ exports.updateMe = catchAsync(async (req, res, next) => {
     filteredBody.avatar = req.file.filename;
   }
 
-  console.log(req.file)
   // 3 Fetch the current user from the database
   const savedUser = await userModel.getUserById(req.userId);
   if (!savedUser) {
