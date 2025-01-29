@@ -9,7 +9,7 @@ exports.createChat = catchAsync(async (req, res, next) => {
       new AppError('Chat need to have two users', 400)
     )
   }
-  
+
   // Check if the two users are  already chatting
   const result = await chatModel.getChatByUsersIds({ toUserId, fromUserId })
   if (result) {
