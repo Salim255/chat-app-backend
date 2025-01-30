@@ -58,18 +58,20 @@ io.on('connect', (socket) => {
     }
   });
 
-  socket.on('disconnect', (reason) => {
+  // Use the "disconnecting" event to access the rooms before the socket is removed
+  socket.on('disconnecting', () => {
     const socketId = socket.id;
     // Find the key corresponding to the value
-    let key = null;
     for (const [mapKey, mapValue] of onlineUsers.entries()) {
       if (mapValue === socketId) {
-        key = mapKey;
+        onlineUsers.delete(mapKey); // Remove from custom data structure
         break;
       }
     }
-    console.log('User disconnected: ', reason);
-    onlineUsers.delete(key); // Remove from custom data structure
+  });
+
+  socket.on('disconnect', (reason) => {
+    console.log('User disconnected: ', socket.id);
   });
 })
 
