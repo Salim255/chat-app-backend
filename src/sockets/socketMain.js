@@ -18,30 +18,58 @@ io.on('connect', (socket) => {
     const roomId = generateRoomId(fromUserId, toUserId);
     console.log(roomId)
     socket.join(roomId);
-    console.log(`User ${fromUserId} joined room: ${roomId}`);
+    // console.log(`User ${fromUserId} joined room: ${roomId}`);
   });
 
   // Listen for "message" events to broadcast messages in the room
-  socket.on('send-message', ({ roomId, messageId, toUserId, fromUserId }) => {
-    console.log(`Message sent to room ${roomId}: ${messageId}`);
+  socket.on('send-message', async ({ roomId, message, toUserId, fromUserId }) => {
+    // console.log(`Message sent to room ${roomId}: ${message.id}`);
 
-    // Emit message to the room
-    io.to(roomId).emit('receive-message', messageId);
+    // Check if the Receiver in the room or not and its connected
+    // search for a room by its id
+    const room = io.sockets.adapter.rooms.get(roomId);
+    // check if the toUser id socketId is in the room with id
+    const receiverInRoom = room && room.has(onlineUsers.get(toUserId));
 
     // Update the message in the database (as "delivered")
     if (onlineUsers.has(toUserId)) {
-      // Update the message status in the DB
-      const result = socketMessagesController.markMessageAsDelivered(messageId, 'delivered', fromUserId);
-      if (!result) {
-        return;
+      if (receiverInRoom && onlineUsers.has(toUserId)) {
+        // Update the message status in the DB
+        const result = await socketMessagesController.updateMessageStatus(message.id, 'read', fromUserId);
+        if (!result) {
+          return;
+        }
+
+        // Notify the message to sender & receiver as read message
+        io.to(roomId).emit('message-read', result);
+      } else {
+        // Update the message status in the DB
+        const result = await socketMessagesController.updateMessageStatus(message.id, 'delivered', fromUserId);
+        console.log(result)
+        if (!result) {
+          return;
+        }
+        // Notify the message to sender as delivered message
+        io.to(roomId).emit('message-delivered', result);
+
+        // Send message notification to receiver by receiver socketId
+        io.to(onlineUsers.get(toUserId)).emit('message-delivered-to-receiver', result)
       }
-      // Notify sender
-      io.to(roomId).emit('message-delivered', messageId);
     }
   });
 
-  socket.on('disconnect', (reasons) => {
-    console.log('User disconnected', reasons);
+  socket.on('disconnect', (reason) => {
+    const socketId = socket.id;
+    // Find the key corresponding to the value
+    let key = null;
+    for (const [mapKey, mapValue] of onlineUsers.entries()) {
+      if (mapValue === socketId) {
+        key = mapKey;
+        break;
+      }
+    }
+    console.log('User disconnected: ', reason);
+    onlineUsers.delete(key); // Remove from custom data structure
   });
 })
 
