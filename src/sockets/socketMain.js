@@ -14,49 +14,77 @@ io.on('connect', (socket) => {
   })
 
   // Listen for the "join-room" event to create/join a chat room
-  socket.on('join-room', ({ fromUserId, toUserId }) => {
+  socket.on('join-room', async ({ fromUserId, toUserId }) => {
     const roomId = generateRoomId(fromUserId, toUserId);
-    console.log(roomId)
+    // Socket join room
     socket.join(roomId);
-    // console.log(`User ${fromUserId} joined room: ${roomId}`);
+
+    // Update all messages to read messages
+    const result = await socketMessagesController.updateMessagesStatusWithJoinRoom(fromUserId, toUserId);
+
+    // Get the room size (number of connected clients in the room)
+    const roomSize = io.sockets.adapter.rooms.get(roomId)?.size || 0;
+
+    // Check if the sender is connected so we send the notification
+    if (roomSize > 1) {
+      // Check that result is not empty array
+      if (result && result.length > 0) {
+        // Here we send notification to the sender
+        // (user that send message to this socket.id)
+        // Broadcast the notification to other users in the room except the current socket
+        socket.to(roomId).emit('partner-joined-room', result);
+      }
+    }
   });
 
   // Listen for "message" events to broadcast messages in the room
   socket.on('send-message', async ({ roomId, message, toUserId, fromUserId }) => {
-    // console.log(`Message sent to room ${roomId}: ${message.id}`);
-
     // Check if the Receiver in the room or not and its connected
     // search for a room by its id
     const room = io.sockets.adapter.rooms.get(roomId);
+    const receiverSocketId = onlineUsers.get(toUserId);
     // check if the toUser id socketId is in the room with id
-    const receiverInRoom = room && room.has(onlineUsers.get(toUserId));
+    const receiverInRoom = room && room.has(receiverSocketId);
 
     // Update the message in the database (as "delivered")
-    if (onlineUsers.has(toUserId)) {
-      if (receiverInRoom && onlineUsers.has(toUserId)) {
-        // Update the message status in the DB
-        const result = await socketMessagesController.updateMessageStatus(message.id, 'read', fromUserId);
-        if (!result) {
-          return;
-        }
-
-        // Notify the message to sender & receiver as read message
-        io.to(roomId).emit('message-read', result);
-      } else {
-        // Update the message status in the DB
-        const result = await socketMessagesController.updateMessageStatus(message.id, 'delivered', fromUserId);
-        console.log(result)
-        if (!result) {
-          return;
-        }
-        // Notify the message to sender as delivered message
-        io.to(roomId).emit('message-delivered', result);
-
-        // Send message notification to receiver by receiver socketId
-        io.to(onlineUsers.get(toUserId)).emit('message-delivered-to-receiver', result)
+    if (receiverInRoom) {
+      // Update the message status in the DB
+      const result = await socketMessagesController.updateMessageStatus(message.id, 'read', fromUserId);
+      if (!result) {
+        return;
       }
+      // Notify the message to sender & receiver as read message
+      io.to(roomId).emit('message-read', result);
+      if (receiverInRoom && onlineUsers.has(toUserId)) {
+        console.log()
+      }
+    } else if (!receiverInRoom && onlineUsers.has(toUserId)) {
+      // Connected receiver
+      // Update the message status in the DB
+      const result = await socketMessagesController.updateMessageStatus(message.id, 'delivered', fromUserId);
+      if (!result) {
+        return;
+      }
+      // Notify the message to sender as delivered message
+      io.to(roomId).emit('message-delivered', result);
+      // Send message notification to receiver by receiver socketId
+      io.to(onlineUsers.get(toUserId)).emit('message-delivered-to-receiver', result)
+    } else {
+      // Disconnected receiver
+      console.log('Not connected user')
     }
   });
+
+  // Leaving room listener
+  socket.on('leave-room', ({ roomId, userId }) => {
+    // console.log(roomId, userId)
+    const socketByUserId = onlineUsers.get(userId);
+
+    if (socketByUserId === socket.id) {
+      socket.leave(roomId); // Remove socket from room with roomId
+      io.to(roomId).emit('user-left', { userId, roomId }); // Notify other users in the room
+    }
+  })
 
   // Use the "disconnecting" event to access the rooms before the socket is removed
   socket.on('disconnecting', () => {
@@ -68,6 +96,18 @@ io.on('connect', (socket) => {
         break;
       }
     }
+
+    // Check all rooms the socket is in and leave them
+    socket.rooms.forEach(roomId => {
+      socket.leave(roomId); // Ensure the socket leaves the rooms
+      console.log(`Socket ${socketId} left room: ${roomId}`);
+
+      // Check if the room is now empty and perform cleanup if needed
+      const room = io.sockets.adapter.rooms.get(roomId);
+      if (room && room.size === 0) {
+        console.log(`Room ${roomId} is empty and can be cleaned up.`);
+      }
+    });
   });
 
   socket.on('disconnect', (reason) => {

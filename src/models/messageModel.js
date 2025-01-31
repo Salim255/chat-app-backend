@@ -60,6 +60,22 @@ class Message {
       `, [userId])
     return rows
   }
+
+  // This code used to update messages in room to read once receiver joined a room
+  static async updateMessagesToReadByReceiver (fromUserId, toUserId) {
+    console.log(typeof fromUserId, toUserId)
+
+    const fromUser = toUserId;
+    const toUser = fromUserId;
+    const { rows } = await pool.query(`
+      UPDATE messages
+      SET status = 'read'
+      WHERE status = 'delivered' AND to_user_id = $1 AND from_user_id = $2
+          RETURNING *;
+      `, [toUser, fromUser])
+    console.log(rows[0])
+    return rows
+  }
 }
 
 module.exports = Message
