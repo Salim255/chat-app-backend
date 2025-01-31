@@ -6,13 +6,10 @@ const onlineUsers = new Map(); // Map of user -> socketId
 io.on('connect', (socket) => {
   // Listen for the "register" event to associate a user with their socket
   socket.on('registerUser', async (userId) => {
-    console.log(`User registered: ${userId}`);
     onlineUsers.set(userId, socket.id);
-
     // Notify that the user is online
     if (userId) {
       const result = await authController.updateUserConnectionStatus(userId, 'online');
-      console.log(result)
       if (result) {
         socket.broadcast.emit('user-online', result)
       }
@@ -43,6 +40,19 @@ io.on('connect', (socket) => {
     }
   });
 
+  // Listen to typing event
+  socket.on('user-typing', (data) => {
+    if (data.roomId) {
+      socket.to(data.roomId).emit('notify-user-typing', data.typingStatus);
+    }
+  })
+
+  // Liston to user-stop-typing event
+  socket.on('user-stop-typing', (data) => {
+    if (data.roomId) {
+      socket.to(data.roomId).emit('notify-user-stop-typing', data.typingStatus);
+    }
+  })
   // Listen for "message" events to broadcast messages in the room
   socket.on('send-message', async ({ roomId, message, toUserId, fromUserId }) => {
     // Check if the Receiver in the room or not and its connected
