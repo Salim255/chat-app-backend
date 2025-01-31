@@ -1,16 +1,22 @@
 const io = require('../../server').io;
-const socketMessagesController = require('./controllers/socketMessagesController');
+const { messageController, authController, generateRoomId } = require('./controllers/socketController');
 
 const onlineUsers = new Map(); // Map of user -> socketId
 
 io.on('connect', (socket) => {
   // Listen for the "register" event to associate a user with their socket
-  socket.on('registerUser', userId => {
+  socket.on('registerUser', async (userId) => {
     console.log(`User registered: ${userId}`);
     onlineUsers.set(userId, socket.id);
 
     // Notify that the user is online
-    socket.broadcast.emit('user-online', userId)
+    if (userId) {
+      const result = await authController.updateUserConnectionStatus(userId, 'online');
+      console.log(result)
+      if (result) {
+        socket.broadcast.emit('user-online', result)
+      }
+    }
   })
 
   // Listen for the "join-room" event to create/join a chat room
@@ -20,7 +26,7 @@ io.on('connect', (socket) => {
     socket.join(roomId);
 
     // Update all messages to read messages
-    const result = await socketMessagesController.updateMessagesStatusWithJoinRoom(fromUserId, toUserId);
+    const result = await messageController.updateMessagesStatusWithJoinRoom(fromUserId, toUserId);
 
     // Get the room size (number of connected clients in the room)
     const roomSize = io.sockets.adapter.rooms.get(roomId)?.size || 0;
@@ -49,7 +55,7 @@ io.on('connect', (socket) => {
     // Update the message in the database (as "delivered")
     if (receiverInRoom) {
       // Update the message status in the DB
-      const result = await socketMessagesController.updateMessageStatus(message.id, 'read', fromUserId);
+      const result = await messageController.updateMessageStatus(message.id, 'read', fromUserId);
       if (!result) {
         return;
       }
@@ -61,7 +67,7 @@ io.on('connect', (socket) => {
     } else if (!receiverInRoom && onlineUsers.has(toUserId)) {
       // Connected receiver
       // Update the message status in the DB
-      const result = await socketMessagesController.updateMessageStatus(message.id, 'delivered', fromUserId);
+      const result = await messageController.updateMessageStatus(message.id, 'delivered', fromUserId);
       if (!result) {
         return;
       }
@@ -87,12 +93,20 @@ io.on('connect', (socket) => {
   })
 
   // Use the "disconnecting" event to access the rooms before the socket is removed
-  socket.on('disconnecting', () => {
+  socket.on('disconnecting', async () => {
     const socketId = socket.id;
     // Find the key corresponding to the value
     for (const [mapKey, mapValue] of onlineUsers.entries()) {
       if (mapValue === socketId) {
-        onlineUsers.delete(mapKey); // Remove from custom data structure
+        // Notify that the user is offline
+        const userId = mapKey;
+        const result = await authController.updateUserConnectionStatus(userId, 'offline');
+        if (result) {
+          socket.broadcast.emit('user-offline', result);
+        }
+
+        // Remove from custom data structure
+        onlineUsers.delete(mapKey);
         break;
       }
     }
@@ -114,8 +128,3 @@ io.on('connect', (socket) => {
     console.log('User disconnected: ', socket.id);
   });
 })
-
-// Helper to generate a unique room ID for two users
-function generateRoomId (user1, user2) {
-  return [user1, user2].sort().join('-'); // Sort to ensure consistent room IDs
-}
