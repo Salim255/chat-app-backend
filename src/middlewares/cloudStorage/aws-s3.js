@@ -1,13 +1,16 @@
-// npm install aws-sdk
+// npm install @aws-sdk/client-s3
 require('dotenv').config();
-const AWS = require('aws-sdk');
 const catchAsync = require('../../utils/catchAsync');
 const AppError = require('../../utils/appError');
+const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
 
-AWS.config.update({
-  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-  region: process.env.REGION // Choose the region of your S3 bucket
+// Create an S3 service object
+const s3 = new S3Client({
+  region: process.env.REGION, // Choose the region of your S3 bucket
+  credentials: {
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
+  }
 });
 
 exports.uploadToS3Bucket = catchAsync(async (req, res, next) => {
@@ -15,9 +18,6 @@ exports.uploadToS3Bucket = catchAsync(async (req, res, next) => {
   if (!file) {
     return next(new AppError('No file uploaded.', 400));
   }
-
-  // Create an S3 service object
-  const s3 = new AWS.S3();
 
   // uploadParams to Upload file into your S3 bucket
   const uploadParams = {
@@ -28,11 +28,11 @@ exports.uploadToS3Bucket = catchAsync(async (req, res, next) => {
     ACL: 'public-read'
   };
 
-  // Upload to S3
-  const data = await s3.upload(uploadParams).promise();
+  // Create a new instance of PutObjectCommand
+  const command = new PutObjectCommand(uploadParams)
 
-  console.log('====================================');
-  console.log('Hello from aws', data);
-  console.log('====================================');
+  // Upload to S3
+  await s3.send(command)
+
   next();
 })

@@ -21,14 +21,13 @@ module.exports = () => {
   // origin: 'http://localhost:8100',
   const corsOptions = {
     origin: '*',
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true
   };
   app.use(cors(corsOptions));
 
   app.use(express.json())
-  
 
   if (process.env.NODE_ENV === 'development') app.use(morgan('dev'))
 

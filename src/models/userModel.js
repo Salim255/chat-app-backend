@@ -52,6 +52,16 @@ class User {
     return rows[0]
   }
 
+  static async updateUserConnectionStatus (userId, connectionStatus) {
+    const { rows } = await pool.query(`
+      UPDATE users
+      SET connection_status = $1
+      WHERE users.id = $2
+      RETURNING id, first_name, last_name, avatar, connection_status;
+    `, [connectionStatus, userId]);
+    return rows[0];
+  }
+
   static async deleteUser (userId) {}
 
   static create () {

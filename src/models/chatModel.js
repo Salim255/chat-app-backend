@@ -30,7 +30,7 @@ class Chat {
     SELECT chats.id, chats.type, chats.created_at, chats.updated_at,
 
     (SELECT jsonb_agg(users) FROM (
-      SELECT u.id AS user_id, u.avatar, u.last_name , u.first_name FROM users u
+      SELECT u.id AS user_id, u.avatar, u.last_name , u.first_name, u.connection_status FROM users u
         WHERE u.id IN (
           SELECT uc.user_id FROM userChats uc
             WHERE uc.chat_id = cu.chat_id)
@@ -80,7 +80,7 @@ class Chat {
     const { rows } = await pool.query(`
     SELECT c.*,
         ( SELECT jsonb_agg(users) FROM (
-            SELECT u.id AS user_id, u.avatar, u.last_name , u.first_name FROM users u
+            SELECT u.id AS user_id, u.avatar, u.last_name , u.first_name , u.connection_status FROM users u
               WHERE u.id IN (
                 SELECT uc.user_id FROM userChats uc
                   WHERE uc.chat_id = c.id)

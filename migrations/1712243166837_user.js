@@ -24,7 +24,9 @@ exports.up = pgm => {
 
       is_staff BOOLEAN DEFAULT FALSE,
 
-      is_active BOOLEAN DEFAULT TRUE
+      is_active BOOLEAN DEFAULT TRUE,
+
+      connection_status VARCHAR(50) NOT NULL DEFAULT 'offline' CHECK (connection_status IN ('offline', 'online', 'away'))
     )
   `
   )

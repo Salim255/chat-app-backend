@@ -84,7 +84,7 @@ exports.updateMe = catchAsync(async (req, res, next) => {
   }
 
   // 3 Fetch the current user from the database
-  const savedUser = await userModel.getUserById(1);
+  const savedUser = await userModel.getUserById(req.userId);
   if (!savedUser) {
     return next(
       new AppError('User not found', 400)
@@ -155,4 +155,14 @@ exports.protect = catchAsync(async (req, res, next) => {
   req.userId = decoded.id
 
   next()
+})
+
+exports.updateUserConnectionStatus = catchAsync(async (userId, connectionStatus) => {
+  // Fetch the current user from the database
+  const savedUser = await userModel.getUserById(userId);
+  if (!savedUser) {
+    return
+  }
+  const result = await userModel.updateUserConnectionStatus(userId, connectionStatus);
+  return result;
 })
