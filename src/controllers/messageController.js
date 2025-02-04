@@ -1,6 +1,8 @@
-const messageModel = require('../models/messageModel')
-const chatModel = require('../models/chatModel')
-const catchAsync = require('../utils/catchAsync')
+const messageModel = require('../models/messageModel');
+const chatModel = require('../models/chatModel');
+const userModel = require('../models/userModel');
+const catchAsync = require('../utils/catchAsync');
+const pool = require('../config/pool');
 
 exports.counter = catchAsync(async (req, res, next) => {
   return await messageModel.count()
@@ -9,9 +11,18 @@ exports.counter = catchAsync(async (req, res, next) => {
 exports.firstMessage = catchAsync(async (req, res, next) => {
   const { content, toUserId, fromUserId } = req.body;
 
-  await messageModel.insert({ content, fromUserId, toUserId, chatId: req.chatId })
+  // Check partner connection status
+  const partner = await userModel.getUserById(toUserId);
+  let partnerConnectionStatus;
+  console.log(partner)
+  if (partner) {
+    partnerConnectionStatus = partner.connection_status;
+  }
 
-  const chat = await chatModel.getChatByChatId({ userId: fromUserId, chatId: req.chatId })
+  await messageModel.insert({ content, fromUserId, toUserId, chatId: req.chatId, partnerConnectionStatus })
+
+  const chat = await chatModel.getChatByChatId({ userId: fromUserId, chatId: req.chatId });
+  await pool.query('COMMIT');
   res.status(200).json({
     status: 'success',
     data: chat[0]
@@ -19,8 +30,10 @@ exports.firstMessage = catchAsync(async (req, res, next) => {
 })
 
 exports.sendMessage = catchAsync(async (req, res, next) => {
-  const { content, toUserId, chatId } = req.body
-  await messageModel.insert({ content, fromUserId: req.userId, toUserId, chatId })
+  const { content, toUserId, chatId } = req.body;
+  let partnerConnectionStatus;
+
+  await messageModel.insert({ content, fromUserId: req.userId, toUserId, chatId, partnerConnectionStatus })
 
   const chat = await chatModel.getChatByChatId({ userId: req.userId, chatId })
 

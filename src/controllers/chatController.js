@@ -1,9 +1,9 @@
-const chatModel = require('../models/chatModel')
+const chatModel = require('../models/chatModel');
 const catchAsync = require('../utils/catchAsync')
-
+const pool = require('../config/pool');
 exports.createChat = catchAsync(async (req, res, next) => {
   const { toUserId, fromUserId } = req.body;
-
+  await pool.query('BEGIN');
   if (!toUserId || !fromUserId) {
     return next(
       new AppError('Chat need to have two users', 400)
@@ -11,12 +11,13 @@ exports.createChat = catchAsync(async (req, res, next) => {
   }
 
   // Check if the two users are  already chatting
-  const result = await chatModel.getChatByUsersIds({ toUserId, fromUserId })
+  const result = await chatModel.getChatByUsersIds({ toUserId, fromUserId });
   if (result) {
     return next(
       new AppError('Users already in chat connection', 400)
     )
   }
+
   // Create chat
   const { id: chatId } = await chatModel.insert()
   req.chatId = chatId
