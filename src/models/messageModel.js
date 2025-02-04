@@ -1,12 +1,14 @@
 const pool = require('../config/pool')
 
 class Message {
-  static async insert (data) {
+  static async insert ({ content, fromUserId, toUserId, chatId, partnerConnectionStatus }) {
+    const partnerStatus = partnerConnectionStatus === 'online' ? 'delivered' : 'sent';
+
     const { rows } = await pool.query(`
-        INSERT INTO messages (content, from_user_id, to_user_id , chat_id)
+        INSERT INTO messages (content, from_user_id, to_user_id , chat_id, status)
         VALUES
-            ($1, $2, $3, $4) RETURNING *;
-        `, [data.content, data.fromUserId, data.toUserId, data.chatId])
+            ($1, $2, $3, $4, $5) RETURNING *;
+        `, [content, fromUserId, toUserId, chatId, partnerStatus])
     return rows[0]
   }
 
