@@ -27,7 +27,6 @@ class Message {
         WHERE id = $2 AND from_user_id = $3
         RETURNING *;
     `, [messageStatus, messageId, userId]);
-
     return rows[0]
   }
 

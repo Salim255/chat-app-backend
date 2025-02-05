@@ -64,6 +64,7 @@ io.on('connect', (socket) => {
 
     // Update the message in the database (as "delivered")
     if (receiverInRoom) {
+      console.log('Receiver is in room')
       // Update the message status in the DB
       const result = await messageController.updateMessageStatus(message.id, 'read', fromUserId);
       if (!result) {
