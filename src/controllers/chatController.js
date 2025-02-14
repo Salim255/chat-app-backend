@@ -88,6 +88,7 @@ exports.createChat = catchAsync(async (req, res, next) => {
     });
     // ====== End with success ===========
   } catch (error) {
+    console.log(error)
     await pool.query('ROLLBACK');
     return next(new AppError(error, 500));
   }
