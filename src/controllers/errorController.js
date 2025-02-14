@@ -1,7 +1,6 @@
 const AppError = require('../utils/appError')
-const pool = require('../config/pool')
+
 const sendErrorDev = async (err, res) => {
-  await pool.query('ROLLBACK');
   res.status(err.statusCode).json({
     status: err.status,
     error: err,
@@ -11,7 +10,6 @@ const sendErrorDev = async (err, res) => {
 }
 
 const sendErrorProd = async (err, res) => {
-  await pool.query('ROLLBACK');
   // Operational error, error that we trust: send message to the client
   if (err.isOperational) {
     res.status(err.statusCode).json({
@@ -38,8 +36,9 @@ const handleDuplicateError = (detail) => {
 }
 
 module.exports = (err, req, res, next) => {
-  err.statusCode = err.statusCode || 500
-  err.status = err.status || 'error'
+  err.statusCode = err.statusCode || 500;
+  err.status = err.status || 'error';
+
   if (process.env.NODE_ENV === 'development') {
     sendErrorDev(err, res)
   } else if (process.env.NODE_ENV === 'production') {

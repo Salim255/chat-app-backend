@@ -11,8 +11,8 @@ exports.up = pgm => {
 
         updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
 
-        content VARCHAR(1000),
-
+        content TEXT,
+    
         from_user_id INTEGER,
 
         to_user_id INTEGER,
