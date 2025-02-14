@@ -11,13 +11,13 @@ class ChatUser {
     return rows[0]
   }
 
-  static async insertMany ({ values, placeHolders }) {
+  static async insertMany ({ userValues, placeHolders }) {
     const { rows } = await pool.query(`
       INSERT INTO userChats
           (user_id, chat_id, is_admin)
       VALUES
           ${placeHolders} RETURNING *;
-      `, values)
+      `, userValues)
     return rows
   }
 

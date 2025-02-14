@@ -27,8 +27,14 @@ class Chat {
 
   static async getChatsByUser (userId) {
     const { rows } = await pool.query(`
-    SELECT chats.id, chats.type, chats.created_at, chats.updated_at,
-
+    SELECT 
+      chats.id, 
+      chats.type, 
+      chats.created_at, 
+      chats.updated_at,
+      chats.last_message_id,
+      chats.no_read_messages,
+      
     (SELECT jsonb_agg(users) FROM (
       SELECT u.id AS user_id, u.avatar, u.last_name , u.first_name, u.connection_status FROM users u
         WHERE u.id IN (
@@ -57,7 +63,10 @@ class Chat {
     SELECT
       chats.id, chats.type
       , no_read_messages, 
-      chats.created_at, chats.updated_at,
+      chats.created_at,
+      chats.updated_at,
+      chats.last_message_id,
+      chats.no_read_messages,
 
     ------ Get users in the chat ------
     (SELECT jsonb_agg(users)
@@ -139,9 +148,9 @@ class Chat {
     return rows[0].count
   }
 
-  static async insert (client = pool) {
+  static async insert () {
     const noReadMessagesCounter = 1;
-    const { rows } = await client.query(`
+    const { rows } = await pool.query(`
     INSERT INTO chats
         (no_read_messages)
     VALUES
