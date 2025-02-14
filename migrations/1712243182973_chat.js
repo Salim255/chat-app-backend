@@ -6,12 +6,16 @@ exports.up = pgm => {
   pgm.sql(`
     CREATE TABLE chats (
         id SERIAL PRIMARY KEY,
+        
+        type VARCHAR(25) DEFAULT 'dual',
 
         created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
 
         updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
 
-        type VARCHAR(25) DEFAULT 'dual'
+        last_message_id INTEGER,
+
+        no_read_messages INTEGER DEFAULT 0
     );
   `)
 }

@@ -51,23 +51,47 @@ class Chat {
     return rows
   }
 
+  // === Start =====
   static async getChatByChatId (data) {
     const { rows } = await pool.query(`
-    SELECT chats.id, chats.type, chats.created_at, chats.updated_at,
-    (SELECT jsonb_agg(users) FROM (
-      SELECT * FROM users
+    SELECT
+      chats.id, chats.type
+      , no_read_messages, 
+      chats.created_at, chats.updated_at,
+
+    ------ Get users in the chat ------
+    (SELECT jsonb_agg(users)
+     FROM (
+      SELECT id, first_name, last_name, avatar, connection_status FROM users
         WHERE id IN (
           SELECT uc.user_id FROM userChats uc
             WHERE uc.chat_id = cu.chat_id)
             ) AS users
-        ) AS users
-    ,
-
-    (SELECT jsonb_agg(messages) FROM (
-    SELECT * FROM messages
-    WHERE chat_id = cu.chat_id
-    ORDER BY created_at ASC
-  ) AS messages) AS messages
+        ) AS users,
+ 
+    -- Get the last message (should return a single row)
+    (SELECT row_to_json(msg)
+       FROM (
+        SELECT  
+          id, 
+          created_at, 
+          content, 
+          from_user_id, 
+          status, 
+          chat_id
+        FROM messages WHERE id = chats.last_message_id
+      ) AS msg 
+    ) AS last_message,
+   
+    -- Get all messages in the chat
+    (SELECT jsonb_agg(msgs)
+     FROM 
+       (
+        SELECT * FROM messages
+        WHERE chat_id = cu.chat_id
+        ORDER BY created_at ASC
+        ) AS msgs
+      ) AS messages
 
     FROM userChats cu
     JOIN chats ON cu.chat_id = chats.id
@@ -75,6 +99,7 @@ class Chat {
     `, [data.userId, data.chatId]);
     return rows
   }
+  // ===== End =======
 
   static async getChatByUsersIds (data) {
     const { rows } = await pool.query(`
@@ -114,15 +139,33 @@ class Chat {
     return rows[0].count
   }
 
-  static async insert () {
-    const { rows } = await pool.query(`
+  static async insert (client = pool) {
+    const noReadMessagesCounter = 1;
+    const { rows } = await client.query(`
     INSERT INTO chats
-        (id)
+        (no_read_messages)
     VALUES
-        (DEFAULT)
+        ($1)
     RETURNING * ;
-    `)
+    `, [noReadMessagesCounter])
 
+    return rows[0]
+  }
+
+  static async updateChatLastMessageIdField ({ chatId, messageId }) {
+    const { rows } = await pool.query(`
+         UPDATE chats
+           SET last_message_id  = $2
+             WHERE id= $1
+             RETURNING *;
+         `, [chatId, messageId])
+    return rows[0]
+  }
+
+  static async getChatById (chatId) {
+    const { rows } = await pool.query(`
+      SELECT * FROM chats
+        WHERE id = $1`, [chatId]);
     return rows[0]
   }
 }
