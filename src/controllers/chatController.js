@@ -2,7 +2,7 @@ const chatModel = require('../models/chatModel');
 const chatUserModel = require('../models/chatUserModel');
 const messageModel = require('../models/messageModel');
 const userModel = require('../models/userModel');
-
+const AppError = require('../utils/appError');
 const catchAsync = require('../utils/catchAsync');
 const pool = require('../config/pool');
 
