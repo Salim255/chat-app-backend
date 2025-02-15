@@ -1,30 +1,6 @@
 const pool = require('../config/pool')
 
 class Chat {
-  static async getChats (userId) {
-    const { rows } = await pool.query(`
-    SELECT *,
-
-    (SELECT jsonb_agg(messages)
-       FROM (SELECT * FROM messages ms
-          WHERE ms.chat_id = c.id
-          ) AS messages
-    ) AS messages,
-
-    (SELECT jsonb_agg(users)
-    FROM (
-      SELECT * FROM users
-        WHERE id IN (
-          SELECT uc.user_id FROM userChats uc
-            WHERE uc.chat_id = c.id)
-            ) AS users
-          ) AS users
-    FROM chats c ;
-      `)
-
-    return rows
-  }
-
   static async getChatsByUser (userId) {
     const { rows } = await pool.query(`
     SELECT 
@@ -32,17 +8,29 @@ class Chat {
       chats.type, 
       chats.created_at, 
       chats.updated_at,
-      chats.last_message_id,
       chats.no_read_messages,
-      
+
+     -- Get the last message (should return a single row)
+    (SELECT row_to_json(msg)
+       FROM (
+        SELECT  
+          id, 
+          created_at, 
+          content, 
+          from_user_id, 
+          status, 
+          chat_id
+        FROM messages WHERE id = chats.last_message_id
+      ) AS msg 
+    ) AS last_message,
+
     (SELECT jsonb_agg(users) FROM (
       SELECT u.id AS user_id, u.avatar, u.last_name , u.first_name, u.connection_status FROM users u
         WHERE u.id IN (
           SELECT uc.user_id FROM userChats uc
             WHERE uc.chat_id = cu.chat_id)
             ) AS users
-        ) AS users
-    ,
+        ) AS users,
 
      (SELECT jsonb_agg(messages) FROM (
     SELECT * FROM messages
@@ -61,8 +49,9 @@ class Chat {
   static async getChatByChatId (data) {
     const { rows } = await pool.query(`
     SELECT
-      chats.id, chats.type
-      , no_read_messages, 
+      chats.id,
+      chats.type,
+      no_read_messages, 
       chats.created_at,
       chats.updated_at,
       chats.last_message_id,

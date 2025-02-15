@@ -1,46 +1,52 @@
+const catchAsync = require('../utils/catchAsync');
+const AppError = require('../utils/appError');
 const messageModel = require('../models/messageModel');
 const chatModel = require('../models/chatModel');
-const userModel = require('../models/userModel');
-const catchAsync = require('../utils/catchAsync');
 const pool = require('../config/pool');
 
 exports.counter = catchAsync(async (req, res, next) => {
   return await messageModel.count()
 })
 
-exports.firstMessage = catchAsync(async (req, res, next) => {
-  const { content, toUserId, fromUserId } = req.body;
-
-  // Check partner connection status
-  const partner = await userModel.getUserById(toUserId);
-  let partnerConnectionStatus;
-  console.log(partner)
-  if (partner) {
-    partnerConnectionStatus = partner.connection_status;
-  }
-
-  await messageModel.insert({ content, fromUserId, toUserId, chatId: req.chatId, partnerConnectionStatus })
-
-  const chat = await chatModel.getChatByChatId({ userId: fromUserId, chatId: req.chatId });
-  await pool.query('COMMIT');
-  res.status(200).json({
-    status: 'success',
-    data: chat[0]
-  })
-})
-
 exports.sendMessage = catchAsync(async (req, res, next) => {
-  const { content, toUserId, chatId } = req.body;
-  let partnerConnectionStatus;
+  // ==== Start transaction
+  await pool.query('BEGIN');
+  // =======================
 
-  await messageModel.insert({ content, fromUserId: req.userId, toUserId, chatId, partnerConnectionStatus })
+  try {
+    const { content, toUserId, chatId } = req.body;
+    let partnerConnectionStatus;
 
-  const chat = await chatModel.getChatByChatId({ userId: req.userId, chatId })
+    // Check for validate information
+    if (!toUserId || !content || !chatId) {
+      return next(new AppError('Send message information error need to be provided', 400));
+    }
 
-  res.status(200).json({
-    status: 'success',
-    data: chat
-  })
+    const { id: messageId } = await messageModel.insert({ content, fromUserId: req.userId, toUserId, chatId, partnerConnectionStatus });
+
+    // === Update chat last message
+    if (messageId) {
+      await chatModel.updateChatLastMessageIdField({ chatId, messageId })
+    }
+    // ==== END updated last message
+
+    // ==== Start Fetching chat =====
+    const chat = await chatModel.getChatByChatId({ userId: req.userId, chatId });
+    // ===== End Fetching chat =======
+
+    // Confirm and End transaction
+    await pool.query('COMMIT');
+    // ======================= //
+
+    // ==== Send response =====
+    res.status(200).json({
+      status: 'success',
+      data: chat
+    })
+  } catch (error) {
+    await pool.query('ROLLBACK');
+    return next(new AppError(error, 500));
+  }
 })
 
 exports.updateChatMessagesStatus = catchAsync(async (req, res, next) => {
