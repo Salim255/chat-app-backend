@@ -50,11 +50,21 @@ exports.sendMessage = catchAsync(async (req, res, next) => {
 })
 
 exports.updateChatMessagesStatus = catchAsync(async (req, res, next) => {
+  // ====== Collect required data ====
   const { chatId, status } = req.params;
   const userId = req.userId;
-  const result = (status === 'read' ? await messageModel.updateChatMessagesStatusToRead({ chatId, userId }) : await messageModel.updateChatMessagesStatusToDelivered({ chatId, userId }))
 
-  console.log(result, 'Hello result', chatId, status, userId);
+  // === Start check for data =====
+  if (!chatId || !status) {
+    return next(new AppError('Both chatId and message status are need to be provided', 400));
+  }
+  // ==== End Check for data =====
+
+  // ===== Start update message status ===========
+  const result = (status === 'read' ? await messageModel.updateChatMessagesStatusToRead({ chatId, userId }) : await messageModel.updateChatMessagesStatusToDelivered({ chatId, userId }));
+  // ======== End of update message status =======
+
+  // ==== Send response ======
   res.status(200).json({
     status: 'success',
     data: result
@@ -62,10 +72,21 @@ exports.updateChatMessagesStatus = catchAsync(async (req, res, next) => {
 })
 
 exports.updateMessagesToDeliveredByUser = catchAsync(async (req, res, next) => {
+  // ====== Collect required data ====
   const userId = req.userId;
+  // ======End data collection ====
 
+  // === Start check for data =====
+  if (!userId) {
+    return next(new AppError('User id need to be provided', 400));
+  }
+  // ==== End Check for data =====
+
+  // =====Start  Update message ======
   const result = (userId && await messageModel.updateMessagesToDeliveredByUser(userId));
+  // ======= End update message =======
 
+  // ==== Send response ========
   res.status(200).json({
     status: 'success',
     data: result
@@ -73,11 +94,24 @@ exports.updateMessagesToDeliveredByUser = catchAsync(async (req, res, next) => {
 })
 
 exports.updateMessageStatus = catchAsync(async (messageId, messageStatus, fromUserId) => {
+  // === Start check for data =====
+  if (!messageId || !messageStatus || !fromUserId) {
+    return;
+  }
+  // ==== End Check for data =====
+
+  //  === Starting update =======
   const result = await messageModel.updateSingleMessageStatus({ messageId, messageStatus, userId: fromUserId });
+  // ====== End of update message =====
+
+  // === Send back result ======
   return result;
-})
+});
 
 exports.updateMessagesStatusWithJoinRoom = catchAsync(async (fromUserId, toUserId) => {
+  if (!fromUserId || !toUserId) {
+    return;
+  }
   const result = await messageModel.updateMessagesToReadByReceiver(fromUserId, toUserId);
   return result;
   //
