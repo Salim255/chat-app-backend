@@ -1,6 +1,6 @@
 const authController = require('../../controllers/authController');
 const messageController = require('../../controllers/messageController');
-
+const chatController = require('../../controllers/chatController');
 // Helper to generate a unique room ID for two users
 function generateRoomId (user1, user2) {
   return [user1, user2].sort().join('-'); // Sort to ensure consistent room IDs
@@ -9,5 +9,6 @@ function generateRoomId (user1, user2) {
 module.exports = {
   authController,
   messageController,
+  chatController,
   generateRoomId
 }

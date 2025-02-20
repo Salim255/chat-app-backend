@@ -1,11 +1,12 @@
 const io = require('../../server').io;
-const { messageController, authController, generateRoomId } = require('./controllers/socketController');
+const { messageController, authController, generateRoomId, chatController } = require('./controllers/socketController');
 
 const onlineUsers = new Map(); // Map of user -> socketId
 
 io.on('connect', (socket) => {
-  // Listen for the "register" event to associate a user with their socket
+  // ==== Listen for the "register" event to associate a user with their socket
   socket.on('registerUser', async (userId) => {
+    console.log(socket.id, userId)
     onlineUsers.set(userId, socket.id);
     // Notify that the user is online
     if (userId) {
@@ -15,12 +16,17 @@ io.on('connect', (socket) => {
       }
     }
   })
+  // ======= END register listener ===========
 
-  // Listen for the "join-room" event to create/join a chat room
-  socket.on('join-room', async ({ fromUserId, toUserId }) => {
+  // ===== Listen for the "join-room" event to create/join a chat room =====
+  socket.on('join-room', async ({ fromUserId, toUserId, chatId }) => {
     const roomId = generateRoomId(fromUserId, toUserId);
     // Socket join room
     socket.join(roomId);
+
+    // Update the current change no read messages counter
+    const updatedChatCounter = chatId && await chatController.resetChatCounter({ chatId });
+    io.to(onlineUsers.get(fromUserId)).emit('updated-chat-counter', updatedChatCounter);
 
     // Update all messages to read messages
     const result = await messageController.updateMessagesStatusWithJoinRoom(fromUserId, toUserId);
@@ -39,21 +45,25 @@ io.on('connect', (socket) => {
       }
     }
   });
+  // ====== End Join room  listener ========
 
-  // Listen to typing event
+  // ===== Start listen to typing event =======
   socket.on('user-typing', (data) => {
     if (data.roomId) {
       socket.to(data.roomId).emit('notify-user-typing', data.typingStatus);
     }
   })
+  // ======== END typing Listener ========
 
-  // Liston to user-stop-typing event
+  // ==== Start liston to user-stop-typing event ======
   socket.on('user-stop-typing', (data) => {
     if (data.roomId) {
       socket.to(data.roomId).emit('notify-user-stop-typing', data.typingStatus);
     }
-  })
-  // Listen for "message" events to broadcast messages in the room
+  });
+  // ======== End stop typing listener ======
+
+  // ===== Start listen for "message" events to broadcast messages in the room ====
   socket.on('send-message', async ({ roomId, message, toUserId, fromUserId }) => {
     // Check if the Receiver in the room or not and its connected
     // search for a room by its id
@@ -65,34 +75,39 @@ io.on('connect', (socket) => {
     // Update the message in the database (as "delivered")
     if (receiverInRoom) {
       console.log('Receiver is in room')
+      // ===== Update chat counter when both users are in the room ====
+      await chatController.resetChatCounter({ chatId: message.chat_id });
+
       // Update the message status in the DB
       const result = await messageController.updateMessageStatus(message.id, 'read', fromUserId);
       if (!result) {
         return;
       }
-      // Notify the message to sender & receiver as read message
+      // Notify the sender that the  receiver has read  the message
       io.to(roomId).emit('message-read', result);
-      if (receiverInRoom && onlineUsers.has(toUserId)) {
-        console.log()
-      }
     } else if (!receiverInRoom && onlineUsers.has(toUserId)) {
-      // Connected receiver
+      // Connected receiver but not in the room
       // Update the message status in the DB
       const result = await messageController.updateMessageStatus(message.id, 'delivered', fromUserId);
-      if (!result) {
-        return;
-      }
-      // Notify the message to sender as delivered message
+
+      const updatedChatCounter = await chatController.updateChatCounter({ chatId: message.chat_id, fromUserId });
+      console.log(updatedChatCounter, 'hello updated chat')
+      // Notify the sender that the message delivered to partner that
+      // not currently in the chat room
       io.to(roomId).emit('message-delivered', result);
-      // Send message notification to receiver by receiver socketId
-      io.to(onlineUsers.get(toUserId)).emit('message-delivered-to-receiver', result)
+      // Tell the receiver by its socketId, that there is a new messages
+      // so display the new message as last message
+      io.to(onlineUsers.get(toUserId)).emit('message-delivered-to-receiver', result);
+      io.to(onlineUsers.get(toUserId)).emit('updated-chat-counter', updatedChatCounter);
     } else {
       // Disconnected receiver
+      // If user not //
       console.log('Not connected user')
     }
   });
+  // ===== End Message Event =====
 
-  // Leaving room listener
+  // ===== Start Leaving room listener =====
   socket.on('leave-room', ({ roomId, userId }) => {
     // console.log(roomId, userId)
     const socketByUserId = onlineUsers.get(userId);
@@ -102,8 +117,9 @@ io.on('connect', (socket) => {
       io.to(roomId).emit('user-left', { userId, roomId }); // Notify other users in the room
     }
   })
+  // ====== End leaving room event =======
 
-  // Use the "disconnecting" event to access the rooms before the socket is removed
+  // === Start"disconnecting" event to access the rooms before the socket is removed
   socket.on('disconnecting', async () => {
     const socketId = socket.id;
     // Find the key corresponding to the value
@@ -121,7 +137,7 @@ io.on('connect', (socket) => {
         break;
       }
     }
-
+    // ====== End disconnecting event ========
     // Check all rooms the socket is in and leave them
     socket.rooms.forEach(roomId => {
       socket.leave(roomId); // Ensure the socket leaves the rooms
@@ -134,8 +150,21 @@ io.on('connect', (socket) => {
       }
     });
   });
+  // ====== End  Connect section =====
 
-  socket.on('disconnect', (reason) => {
-    console.log('User disconnected: ', socket.id);
+  // ====== Start user disconnection  event =====
+  socket.on('user_disconnected', async (data) => {
+    const result = await authController.updateUserConnectionStatus(data.userId, 'offline');
+    console.log(result);
+    if (result) {
+      // Emit only to OTHER users
+      socket.broadcast.emit('user_status_changed', result);
+    }
   });
+
+  // ===== Start disconnect section =====
+  socket.on('disconnect', (reason) => {
+    console.log('User disconnected: ', socket.id, reason);
+  });
+  // ===== End disconnect section ===
 })

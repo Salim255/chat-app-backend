@@ -1,14 +1,12 @@
 const pool = require('../config/pool')
 
 class Message {
-  static async insert ({ content, fromUserId, toUserId, chatId, partnerConnectionStatus }) {
-    const partnerStatus = partnerConnectionStatus === 'online' ? 'delivered' : 'sent';
-
+  static async insert ({ content, fromUserId, toUserId, chatId, messageStatus }) {
     const { rows } = await pool.query(`
         INSERT INTO messages (content, from_user_id, to_user_id , chat_id, status)
         VALUES
             ($1, $2, $3, $4, $5) RETURNING *;
-        `, [content, fromUserId, toUserId, chatId, partnerStatus])
+        `, [content, fromUserId, toUserId, chatId, messageStatus])
     return rows[0]
   }
 
@@ -71,7 +69,7 @@ class Message {
     const { rows } = await pool.query(`
       UPDATE messages
       SET status = 'read'
-      WHERE status = 'delivered' AND to_user_id = $1 AND from_user_id = $2
+      WHERE (status = 'delivered' OR  status = 'sent')  AND to_user_id = $1 AND from_user_id = $2
           RETURNING *;
       `, [toUser, fromUser])
     console.log(rows[0])

@@ -14,17 +14,17 @@ exports.sendMessage = catchAsync(async (req, res, next) => {
   // =======================
 
   try {
-    const { content, toUserId, chatId } = req.body;
-    let partnerConnectionStatus;
+    const { content, toUserId, chatId, partnerConnectionStatus } = req.body;
 
     // Check for validate information
     if (!toUserId || !content || !chatId) {
       return next(new AppError('Send message information error need to be provided', 400));
     }
 
-    const { id: messageId } = await messageModel.insert({ content, fromUserId: req.userId, toUserId, chatId, partnerConnectionStatus });
+    const messageStatus = partnerConnectionStatus === 'online' ? 'delivered' : 'sent';
+    const { id: messageId } = await messageModel.insert({ content, fromUserId: req.userId, toUserId, chatId, messageStatus });
 
-    // === Update chat last message
+    // === Update chat last message field  ===
     if (messageId) {
       await chatModel.updateChatLastMessageIdField({ chatId, messageId })
     }

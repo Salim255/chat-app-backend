@@ -166,6 +166,77 @@ class Chat {
         WHERE id = $1`, [chatId]);
     return rows[0]
   }
+
+  static async getLastMessageDetails (chatId) {
+    const { rows } = await pool.query(
+      `SELECT 
+          chats.last_message_id,
+
+        (SELECT row_to_json(msg)
+          FROM (
+            SELECT 
+              m.from_user_id,
+              m.status
+             FROM messages AS m
+              WHERE chats.last_message_id = m.id AND chat_id = $1
+            ) AS msg 
+        ) AS last_message
+
+        FROM chats 
+          WHERE chats.id = $1 ;
+      `, [chatId]);
+    return rows[0];
+  }
+
+  static async resetChatMessagesCounter (chatId) {
+    const { rows } = await pool.query(`
+      UPDATE chats
+        SET no_read_messages = $2
+        WHERE id = $1
+        RETURNING *;
+    `, [chatId, 0]);
+
+    return rows[0];
+  }
+
+  static async incrementChatMessagesCounter (chatId) {
+    const { rows } = await pool.query(`
+        UPDATE chats
+          SET no_read_messages = no_read_messages + 1
+          WHERE id = $1
+          RETURNING *;
+      `, [chatId]);
+
+    return rows[0];
+  }
+
+  static async updateCounter ({ chatId, fromUserId }) {
+    // Get chant with with last message
+  /*   ( SELECT row_to_join (msg)
+    FROM (
+      SELECT * FROM messages
+        WHERE id = last_message_id AND chat_id = $1
+      ) AS msg
+  ) AS last_message  , */
+    const { rows } = await pool.query(
+      `SELECT 
+          chats.last_message_id,
+
+        (SELECT row_to_json(msg)
+          FROM (
+            SELECT 
+              m.from_user_id,
+              m.status
+             FROM messages AS m
+              WHERE chats.last_message_id = m.id AND chat_id = $1
+            ) AS msg 
+        ) AS last_message
+
+        FROM chats 
+          WHERE chats.id = $1 ;
+      `, [chatId]);
+    return rows[0];
+  }
 }
 
 module.exports = Chat
