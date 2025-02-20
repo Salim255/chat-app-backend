@@ -157,12 +157,16 @@ exports.protect = catchAsync(async (req, res, next) => {
   next()
 })
 
-exports.updateUserConnectionStatus = catchAsync(async (userId, connectionStatus) => {
-  // Fetch the current user from the database
-  const savedUser = await userModel.getUserById(userId);
-  if (!savedUser) {
-    return
+exports.updateUserConnectionStatus = async (userId, connectionStatus) => {
+  try {
+    // Fetch the current user from the database
+    const savedUser = await userModel.getUserById(userId);
+    if (!savedUser) {
+      return
+    }
+    const result = await userModel.updateUserConnectionStatus(userId, connectionStatus);
+    return result;
+  } catch (error) {
+    console.log(error)
   }
-  const result = await userModel.updateUserConnectionStatus(userId, connectionStatus);
-  return result;
-})
+}

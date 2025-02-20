@@ -57,7 +57,7 @@ class User {
       UPDATE users
       SET connection_status = $1
       WHERE users.id = $2
-      RETURNING id, first_name, last_name, avatar, connection_status;
+      RETURNING id AS user_id, first_name, last_name, avatar, connection_status;
     `, [connectionStatus, userId]);
     return rows[0];
   }

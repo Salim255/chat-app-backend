@@ -136,6 +136,47 @@ exports.getChatByChatId = catchAsync(async (req, res, next) => {
   })
 })
 
+exports.updateChatCounter = async ({ chatId, fromUserId }) => {
+  try {
+    // 1 === Get last message details
+    const { last_message_id: lastMessageId, last_message: lastMessageDetails } = await chatModel.getLastMessageDetails(chatId);
+    console.log(lastMessageId, lastMessageDetails)
+
+    // 2 ===== Determine the sender of the last message =====
+    if (!lastMessageDetails.from_user_id) {
+      return
+    }
+
+    // === Determine if the current user is the sender
+    // of the last message
+    if (lastMessageDetails.from_user_id === fromUserId) {
+      // === Check if the last message status read or delivered ===
+      if (lastMessageDetails.status === 'read') {
+        // In this case we reset the counter to 0
+        const resetResult = await chatModel.resetChatMessagesCounter(chatId);
+        console.log(resetResult, 'Read');
+        return resetResult;
+      } else {
+        // In this case we increment the counter by 1
+        const incrementResult = await chatModel.incrementChatMessagesCounter(chatId);
+        console.log(incrementResult, 'Delivred');
+        return incrementResult;
+      }
+    } else {
+      // If the current user not the sender of the last message
+      // then reset the chat message counter
+      const resetResult = await chatModel.resetChatMessagesCounter(chatId);
+      return resetResult
+    }
+  } catch (error) {
+    console.log(error.message)
+  }
+}
+
+exports.resetChatCounter = async ({ chatId }) => {
+  const result = await chatModel.resetChatMessagesCounter(chatId);
+  return result;
+}
 exports.counter = catchAsync(async (req, res, next) => {
   return await chatModel.counter()
 })
