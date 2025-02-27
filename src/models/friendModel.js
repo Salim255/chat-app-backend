@@ -1,11 +1,11 @@
 const pool = require('../config/pool')
 
 class Friend {
-  static async insert (data) {
+  static async insert ({ friendId, userId }) {
     const { rows } = await pool.query(`
     INSERT INTO friends (friend_id, user_id)
     VALUES ($1, $2) RETURNING *;
-    `, [data.friend_id, data.userId])
+    `, [friendId, userId])
 
     return rows[0]
   }
@@ -13,33 +13,65 @@ class Friend {
   static async getFriends (userId) {
     const { rows } = await pool.query(`
       SELECT 
-       CASE 
-        WHEN fr.user_id = $1 THEN fr.friend_id
-        ELSE fr.user_id
-      END AS partner_id,
-     u.avatar, u.last_name, u.first_name, u.connection_status
+        u.id AS partner_id,
+        u.first_name,
+        u.last_name,
+        u.avatar,
+        u.connection_status
       FROM users u
-      LEFT JOIN friends fr ON fr.user_id = u.id OR  fr.friend_id = u.id
-        WHERE (fr.user_id = $1 OR  fr.friend_id = $1) AND u.id <> $1  AND fr.status = 2;
+
+      INNER JOIN friends fr
+        ON (fr.user_id = u.id AND fr.friend_id = $1)
+        OR (fr.user_id = $1 AND fr.friend_id = u.id)
+      WHERE fr.status = 2 AND u.id != $1
       `, [userId]);
-    const { rows: res } = await pool.query(`
-      SELECT * from friends;
-      `);
-    console.log(res, 'here');
+
     return rows
+  }
+
+  static async getFriendShip ({ userId, friendId }) {
+    const { rows } = await pool.query(`
+    SELECT * FROM friends
+    WHERE status = 1 AND friend_id = $1 AND user_id = $2 ;
+    `, [userId, friendId])
+    return rows[0]
+  }
+
+  static async acceptFriendShip ({ friendshipId, userId }) {
+    const { rows } = await pool.query(`
+    UPDATE friends
+    SET status = 2
+    WHERE id = $1 AND friend_id = $2 RETURNING *;
+    `, [friendshipId, userId])
+    return rows[0]
   }
 
   static async getNonFriends (userId) {
     const { rows } = await pool.query(`
-    SELECT u.id, u.created_at, u.updated_at, u.first_name, u.last_name, u.avatar, u.connection_status,  u.is_staff
+    SELECT
+      u.id, 
+      u.created_at,
+      u.updated_at,
+      u.first_name,
+      u.last_name,
+      u.avatar,
+      u.connection_status,
+      u.is_staff
+
       FROM users u
-      LEFT JOIN ( SELECT fr.id, fr.created_at, fr.updated_at, fr.friend_id, fr.user_id,
-        fr.status, u.avatar, u.last_name, u.first_name
-      FROM users u
-      LEFT JOIN friends fr ON fr.user_id = u.id OR  fr.friend_id = u.id
-        WHERE (fr.user_id = $1 OR  fr.friend_id = $1) AND u.id <> $1  AND fr.status = 2) r
-          ON r.friend_id = u.id OR  r.user_id = u.id
-      WHERE u.id <> $1 AND r.id IS NULL
+      WHERE u.id != $1  AND 
+        NOT EXISTS (
+          -- Exclude the users in a friendship with the current user (with status 2)
+          SELECT 1
+          FROM friends fr
+          WHERE 
+            (
+            (fr.user_id = u.id AND fr.friend_id = $1)
+            OR (fr.friend_id = u.id AND fr.user_id = $1)
+            ) 
+            AND fr.status = 2 --- Only exclude accepted friends
+            OR (fr.user_id = $1 AND fr.friend_id = u.id AND fr.status = 1) -- Exclude sent requests
+        )
     `, [userId])
     return rows
   }

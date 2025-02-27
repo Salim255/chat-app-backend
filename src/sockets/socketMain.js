@@ -19,14 +19,16 @@ io.on('connect', (socket) => {
   // ======= END register listener ===========
 
   // ===== Listen for the "join-room" event to create/join a chat room =====
-  socket.on('join-room', async ({ fromUserId, toUserId, chatId }) => {
+  socket.on('join-room', async ({ fromUserId, toUserId, chatId, lastMessageSenderId }) => {
     const roomId = generateRoomId(fromUserId, toUserId);
     // Socket join room
     socket.join(roomId);
 
     // Update the current change no read messages counter
-    const updatedChatCounter = chatId && await chatController.resetChatCounter({ chatId });
-    io.to(onlineUsers.get(fromUserId)).emit('updated-chat-counter', updatedChatCounter);
+    const updatedChatCounter = (chatId && lastMessageSenderId !== fromUserId) && await chatController.resetChatCounter({ chatId });
+    if (updatedChatCounter) {
+      io.to(onlineUsers.get(fromUserId)).emit('updated-chat-counter', updatedChatCounter);
+    }
 
     // Update all messages to read messages
     const result = await messageController.updateMessagesStatusWithJoinRoom(fromUserId, toUserId);
@@ -49,6 +51,7 @@ io.on('connect', (socket) => {
 
   // ===== Start listen to typing event =======
   socket.on('user-typing', (data) => {
+    console.log(data, "typing")
     if (data.roomId) {
       socket.to(data.roomId).emit('notify-user-typing', data.typingStatus);
     }
@@ -57,6 +60,7 @@ io.on('connect', (socket) => {
 
   // ==== Start liston to user-stop-typing event ======
   socket.on('user-stop-typing', (data) => {
+    console.log(data, "Stop typing")
     if (data.roomId) {
       socket.to(data.roomId).emit('notify-user-stop-typing', data.typingStatus);
     }

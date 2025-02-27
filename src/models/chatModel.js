@@ -40,7 +40,8 @@ class Chat {
 
     FROM userChats cu
     JOIN chats ON cu.chat_id = chats.id
-      WHERE cu.user_id = $1
+    WHERE cu.user_id = $1
+    ORDER BY chats.updated_at
     `, [userId])
     return rows
   }
@@ -153,7 +154,8 @@ class Chat {
   static async updateChatLastMessageIdField ({ chatId, messageId }) {
     const { rows } = await pool.query(`
          UPDATE chats
-           SET last_message_id  = $2
+           SET last_message_id  = $2,
+                updated_at = CURRENT_TIMESTAMP
              WHERE id= $1
              RETURNING *;
          `, [chatId, messageId])
