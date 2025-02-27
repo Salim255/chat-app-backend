@@ -19,11 +19,23 @@ class Friend {
         u.avatar,
         u.connection_status
       FROM users u
-
+    
       INNER JOIN friends fr
-        ON (fr.user_id = u.id AND fr.friend_id = $1)
-        OR (fr.user_id = $1 AND fr.friend_id = u.id)
-      WHERE fr.status = 2 AND u.id != $1
+        ON (
+          (fr.user_id = u.id AND fr.friend_id = $1)
+          OR (fr.user_id = $1 AND fr.friend_id = u.id)
+        )
+
+      WHERE fr.status = 2 AND u.id != $1 AND  NOT EXISTS (
+        SELECT 1
+        FROM messages msg
+        WHERE 
+          (
+          (msg.from_user_id = u.id AND msg.to_user_id = $1)
+          OR (msg.to_user_id = u.id AND msg.from_user_id = $1)
+          ) 
+        )
+        
       `, [userId]);
 
     return rows
