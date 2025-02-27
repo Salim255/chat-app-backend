@@ -53,17 +53,20 @@ exports.createChat = catchAsync(async (req, res, next) => {
 
     // ======== Get partner connection status ====
     const partner = await userModel.getUserById(toUserId);
-    const partnerConnectionStatus = partner ? partner.connection_status : null;
+
+    const partnerConnectionStatus = partner.connection_status;
+
+    const messageStatus = partnerConnectionStatus === 'online' ? 'delivered' : 'sent';
     // ===== End Getter =========
 
     // ===== Start Create first message
-    const { id: messageId } = await messageModel.insert(
+    const { id: messageId } = partnerConnectionStatus && await messageModel.insert(
       {
         content,
         fromUserId,
         toUserId,
         chatId,
-        partnerConnectionStatus
+        messageStatus
       });
 
     // ===== End create message

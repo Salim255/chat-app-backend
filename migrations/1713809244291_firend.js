@@ -14,7 +14,7 @@ exports.up = pgm => {
 
         friend_id INTEGER NOT NULL,
 
-        status INTEGER DEFAULT 2,
+        status INTEGER DEFAULT 1,
 
         user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE
       )
