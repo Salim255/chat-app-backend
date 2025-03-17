@@ -27,7 +27,7 @@ class Chat {
     (SELECT jsonb_agg(users) FROM (
       SELECT u.id AS user_id, u.avatar, u.last_name , u.first_name, u.connection_status FROM users u
         WHERE u.id IN (
-          SELECT uc.user_id FROM userChats uc
+          SELECT uc.user_id FROM user_chats uc
             WHERE uc.chat_id = cu.chat_id)
             ) AS users
         ) AS users,
@@ -38,7 +38,7 @@ class Chat {
     ORDER BY created_at ASC
   ) AS messages) AS messages
 
-    FROM userChats cu
+    FROM user_chats cu
     JOIN chats ON cu.chat_id = chats.id
     WHERE cu.user_id = $1
     ORDER BY chats.updated_at
@@ -52,19 +52,24 @@ class Chat {
     SELECT
       chats.id,
       chats.type,
-      no_read_messages, 
       chats.created_at,
       chats.updated_at,
       chats.last_message_id,
       chats.no_read_messages,
+      
+      -- Encrypted session key based on sender_id
+      CASE 
+        WHEN sk.sender_id = $1 THEN sk.encrypted_session_for_sender 
+        ELSE sk.encrypted_session_for_receiver 
+      END AS encrypted_session,
 
     ------ Get users in the chat ------
     (SELECT jsonb_agg(users)
      FROM (
       SELECT id, first_name, last_name, avatar, connection_status FROM users
         WHERE id IN (
-          SELECT uc.user_id FROM userChats uc
-            WHERE uc.chat_id = cu.chat_id)
+          SELECT uc.user_id FROM user_chats uc
+            WHERE uc.chat_id = chat_id)
             ) AS users
         ) AS users,
  
@@ -87,14 +92,24 @@ class Chat {
      FROM 
        (
         SELECT * FROM messages
-        WHERE chat_id = cu.chat_id
+        WHERE chat_id = uc.chat_id
         ORDER BY created_at ASC
         ) AS msgs
       ) AS messages
+    ------ End messages getter ----------
+  
+    -----------------------Main table ------
+    FROM user_chats uc
+    
+    ---------------Join chat by chat id-------------
+    JOIN chats ON uc.chat_id = chats.id
+    ----------------End join chat---------------------
 
-    FROM userChats cu
-    JOIN chats ON cu.chat_id = chats.id
-      WHERE cu.user_id = $1 AND chats.id = $2
+    --------------Join session keys by chat id -------
+    LEFT JOIN session_keys sk ON sk.chat_id = chats.id
+    --------------End join session keys -----------
+
+    WHERE uc.user_id = $1 AND chats.id = $2
     `, [data.userId, data.chatId]);
     return rows
   }
@@ -106,7 +121,7 @@ class Chat {
         ( SELECT jsonb_agg(users) FROM (
             SELECT u.id AS user_id, u.avatar, u.last_name , u.first_name , u.connection_status FROM users u
               WHERE u.id IN (
-                SELECT uc.user_id FROM userChats uc
+                SELECT uc.user_id FROM user_chats uc
                   WHERE uc.chat_id = c.id)
                   ) AS users
               ) AS users
@@ -121,7 +136,7 @@ class Chat {
         FROM chats c
         JOIN (
             SELECT chat_id
-            FROM userChats
+            FROM user_chats
             WHERE user_id IN ($1, $2)
             GROUP BY chat_id
             HAVING COUNT(DISTINCT user_id) = 2

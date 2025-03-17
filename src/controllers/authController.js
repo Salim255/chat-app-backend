@@ -1,5 +1,6 @@
 const validator = require('validator')
 const userModel = require('../models/userModel')
+const userKeysModel = require('../models/userKeysModel')
 const tokenHandler = require('../utils/authToken')
 const passwordHandler = require('../utils/password')
 const catchAsync = require('../utils/catchAsync')
@@ -7,16 +8,35 @@ const AppError = require('../utils/appError')
 const objectFilter = require('../utils/objectFilter')
 
 const signup = async (res, req, isStaff = false) => {
-  const { email, password, first_name: firstName, last_name: lastName, confirm_password: confirmPassword } = req.body
+  const {
+    email,
+    password,
+    first_name: firstName,
+    last_name: lastName,
+    confirm_password: confirmPassword
+  } = req.body;
 
-  if (!validator.isEmail(email) || (!password || password.trim().length === 0) || (password !== confirmPassword)) {
-    return next(new AppError('Invalid user information', 400))
+  const { publicKey, privateKey: encryptedPrivateKey } = req.body;
+
+  if (
+    !validator.isEmail(email) ||
+     (!password || password.trim().length === 0) ||
+    (password !== confirmPassword) ||
+    (!encryptedPrivateKey || !publicKey)
+  ) {
+    return next(new AppError('Invalid auth information', 400));
   }
 
-  const hashedPassword = await passwordHandler.hashedPassword(password)
+  const hashedPassword = await passwordHandler.hashedPassword(password);
 
-  const user = await userModel.insert({ email, hashedPassword, firstName, lastName, isStaff })
-  const token = tokenHandler.createToken(user.id)
+  const user = await userModel.insert({ email, hashedPassword, firstName, lastName, isStaff });
+
+  // Start of create user_keys table ////////
+  const userKeys = await userKeysModel.insert({ publicKey, encryptedPrivateKey, userId: user.id });
+
+  // /////////////// End create user_keys /////////////
+
+  const token = tokenHandler.createToken(user.id);
 
   const tokenDetails = tokenHandler.tokenExpiration(token);
 
@@ -25,7 +45,9 @@ const signup = async (res, req, isStaff = false) => {
     data: {
       token,
       id: tokenDetails.id,
-      expireIn: tokenDetails.exp
+      expireIn: tokenDetails.exp,
+      privateKey: userKeys.encrypted_private_key,
+      publicKey: userKeys.public_key
     }
   })
 }
@@ -64,7 +86,14 @@ exports.login = catchAsync(async (req, res, next) => {
 
   res.status(200).json({
     status: 'success',
-    data: { token, id: tokenDetails.id, expireIn: tokenDetails.exp }
+    data: {
+      token,
+      id: tokenDetails.id,
+      expireIn: tokenDetails.exp,
+      privateKey: user.encrypted_private_key,
+      publicKey: user.public_key,
+      email: user.email
+    }
   })
 })
 
@@ -153,7 +182,6 @@ exports.protect = catchAsync(async (req, res, next) => {
 
   // 4 Set user Id in req
   req.userId = decoded.id
-
   next()
 })
 

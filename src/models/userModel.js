@@ -22,7 +22,13 @@ class User {
 
   static async getUser (data) {
     const { rows } = await pool.query(`
-    SELECT * FROM users
+    SELECT 
+      u.*,
+      uk.encrypted_private_key,
+      uk.public_key
+    FROM users u
+    LEFT JOIN user_keys uk ON uk.user_id = u.id
+   
       WHERE
         email = $1 ;
     `, [data.email])

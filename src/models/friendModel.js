@@ -17,14 +17,18 @@ class Friend {
         u.first_name,
         u.last_name,
         u.avatar,
-        u.connection_status
+        u.connection_status,
+        uk.public_key 
+        
       FROM users u
-    
+
       INNER JOIN friends fr
         ON (
           (fr.user_id = u.id AND fr.friend_id = $1)
           OR (fr.user_id = $1 AND fr.friend_id = u.id)
         )
+
+      LEFT JOIN user_keys uk ON uk.user_id = u.id
 
       WHERE fr.status = 2 AND u.id != $1 AND  NOT EXISTS (
         SELECT 1
@@ -61,16 +65,20 @@ class Friend {
   static async getNonFriends (userId) {
     const { rows } = await pool.query(`
     SELECT
-      u.id, 
+      u.id AS user_id, 
       u.created_at,
       u.updated_at,
       u.first_name,
       u.last_name,
       u.avatar,
       u.connection_status,
-      u.is_staff
-
+      u.is_staff,
+      uk.public_key 
+      
       FROM users u
+
+      LEFT JOIN user_keys uk ON uk.user_id = u.id
+
       WHERE u.id != $1  AND 
         NOT EXISTS (
           -- Exclude the users in a friendship with the current user (with status 2)

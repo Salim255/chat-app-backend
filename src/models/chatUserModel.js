@@ -3,7 +3,7 @@ const pool = require('../config/pool')
 class ChatUser {
   static async insert ({ userId, chatId }) {
     const { rows } = await pool.query(`
-    INSERT INTO userChats
+    INSERT INTO user_chats
         (user_id, chat_id)
     VALUES
         ($1, $2) RETURNING *;
@@ -13,7 +13,7 @@ class ChatUser {
 
   static async insertMany ({ userValues, placeHolders }) {
     const { rows } = await pool.query(`
-      INSERT INTO userChats
+      INSERT INTO user_chats
           (user_id, chat_id, is_admin)
       VALUES
           ${placeHolders} RETURNING *;
@@ -23,7 +23,7 @@ class ChatUser {
 
   static async count () {
     const { rows } = await pool.query(`
-      SELECT COUNT(*) FROM userChats;
+      SELECT COUNT(*) FROM user_chats;
       `)
     return rows[0].count
   }

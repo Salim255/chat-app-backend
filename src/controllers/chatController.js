@@ -1,10 +1,12 @@
+const AppError = require('../utils/appError');
+const catchAsync = require('../utils/catchAsync');
+const pool = require('../config/pool');
+
 const chatModel = require('../models/chatModel');
 const chatUserModel = require('../models/chatUserModel');
 const messageModel = require('../models/messageModel');
 const userModel = require('../models/userModel');
-const AppError = require('../utils/appError');
-const catchAsync = require('../utils/catchAsync');
-const pool = require('../config/pool');
+const sessionModel = require('../models/sessionKeysModel');
 
 // ====== Start Create a new chat
 exports.createChat = catchAsync(async (req, res, next) => {
@@ -12,7 +14,13 @@ exports.createChat = catchAsync(async (req, res, next) => {
   await pool.query('BEGIN'); // Start Transaction
   // ==============================
   try {
-    const { content, toUserId, fromUserId } = req.body;
+    const {
+      content,
+      toUserId,
+      fromUserId,
+      encryptedSessionKeyForSenderBase64,
+      encryptedSessionKeyForReceiverBase64
+    } = req.body;
 
     // ====== Validate user IDs =====
     if (!toUserId || !fromUserId) {
@@ -28,8 +36,6 @@ exports.createChat = catchAsync(async (req, res, next) => {
     // ======== End checking ===========
 
     // ====== Create chat ========
-    // Set A save point
-    // await client.query('SAVEPOINT before_insert');
     const { id: chatId } = await chatModel.insert();
     // ====== End Create chat =====
 
@@ -68,8 +74,20 @@ exports.createChat = catchAsync(async (req, res, next) => {
         chatId,
         messageStatus
       });
-
     // ===== End create message
+
+    // ==== Start create sessionKeys table =====
+    const createSessionData = {
+      chatId,
+      senderId: fromUserId,
+      receiverId: toUserId,
+      encryptedSessionForSender: encryptedSessionKeyForSenderBase64,
+      encryptedSessionForReceiver: encryptedSessionKeyForReceiverBase64
+    };
+    const sessionKeys = await sessionModel.insert(createSessionData);
+    console.log(sessionKeys)
+    // ====== End create sessionKeys =====
+
     // ===== Start Update chat's last_message_id===
     const updatedChat = await chatModel.updateChatLastMessageIdField({ chatId, messageId });
     // ====== End Update chat last_message
@@ -78,7 +96,6 @@ exports.createChat = catchAsync(async (req, res, next) => {
     const chat = await chatModel.getChatByChatId({ userId: fromUserId, chatId });
     // ======== End fetching created chat ========
 
-    // ===== Start set chat last message Id
     // ===== Confirm create chat mission =====
     await pool.query('COMMIT');// Commit if Successful
     // ========================= End ====
@@ -121,7 +138,8 @@ exports.getChatByUsersIds = catchAsync(async (req, res, next) => {
   const { partnerId } = req.params
   const data = { userId1: req.userId, userId2: partnerId * 1 }
 
-  const chat = await chatModel.getChatByUsersIds(data)
+  const chat = await chatModel.getChatByUsersIds(data);
+
   res.status(200).json({
     status: 'success',
     data: chat
