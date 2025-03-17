@@ -37,7 +37,8 @@ exports.addFriend = catchAsync(async (req, res, next) => {
 })
 
 exports.getFriends = catchAsync(async (req, res, next) => {
-  const result = await friendModel.getFriends(req.userId)
+  const result = await friendModel.getFriends(req.userId);
+  console.log(result, 'hello');
   res.status(200).json({
     status: 'success',
     data: result
