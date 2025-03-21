@@ -47,7 +47,8 @@ const signup = async (res, req, isStaff = false) => {
       id: tokenDetails.id,
       expireIn: tokenDetails.exp,
       privateKey: userKeys.encrypted_private_key,
-      publicKey: userKeys.public_key
+      publicKey: userKeys.public_key,
+      email: user.email
     }
   })
 }

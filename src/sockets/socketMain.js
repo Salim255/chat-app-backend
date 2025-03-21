@@ -26,7 +26,9 @@ io.on('connect', (socket) => {
 
     // Update the current change no read messages counter
     const updatedChatCounter = (chatId && lastMessageSenderId !== fromUserId) && await chatController.resetChatCounter({ chatId });
+
     if (updatedChatCounter) {
+      console.log('joined', updatedChatCounter, 'counter', fromUserId, toUserId, chatId, lastMessageSenderId)
       io.to(onlineUsers.get(fromUserId)).emit('updated-chat-counter', updatedChatCounter);
     }
 
@@ -38,12 +40,17 @@ io.on('connect', (socket) => {
 
     // Check if the sender is connected so we send the notification
     if (roomSize > 1) {
+      console.log('Partner joined room')
+      io.to(roomId).emit('partner-joined-room', result);
+
+      // We need this to update conversation
+      // socket.to(roomId).emit('last-partner-joined-room', result);
       // Check that result is not empty array
       if (result && result.length > 0) {
         // Here we send notification to the sender
         // (user that send message to this socket.id)
         // Broadcast the notification to other users in the room except the current socket
-        socket.to(roomId).emit('partner-joined-room', result);
+        // socket.to(roomId).emit('partner-joined-room', result);
       }
     }
   });
@@ -51,7 +58,6 @@ io.on('connect', (socket) => {
 
   // ===== Start listen to typing event =======
   socket.on('user-typing', (data) => {
-    console.log(data, "typing")
     if (data.roomId) {
       socket.to(data.roomId).emit('notify-user-typing', data.typingStatus);
     }
@@ -60,7 +66,6 @@ io.on('connect', (socket) => {
 
   // ==== Start liston to user-stop-typing event ======
   socket.on('user-stop-typing', (data) => {
-    console.log(data, "Stop typing")
     if (data.roomId) {
       socket.to(data.roomId).emit('notify-user-stop-typing', data.typingStatus);
     }
@@ -69,40 +74,46 @@ io.on('connect', (socket) => {
 
   // ===== Start listen for "message" events to broadcast messages in the room ====
   socket.on('send-message', async ({ roomId, message, toUserId, fromUserId }) => {
-    // Check if the Receiver in the room or not and its connected
+    // Check if the Receiver in the room
     // search for a room by its id
-    const room = io.sockets.adapter.rooms.get(roomId);
     const receiverSocketId = onlineUsers.get(toUserId);
+    const room = io.sockets.adapter.rooms.get(roomId);
+
     // check if the toUser id socketId is in the room with id
     const receiverInRoom = room && room.has(receiverSocketId);
 
-    // Update the message in the database (as "delivered")
     if (receiverInRoom) {
-      console.log('Receiver is in room')
+      console.log(' All Receiver is in room')
       // ===== Update chat counter when both users are in the room ====
       await chatController.resetChatCounter({ chatId: message.chat_id });
 
-      // Update the message status in the DB
+      // Update the message status to read in the DB
       const result = await messageController.updateMessageStatus(message.id, 'read', fromUserId);
+
       if (!result) {
         return;
       }
       // Notify the sender that the  receiver has read  the message
-      io.to(roomId).emit('message-read', result);
+      socket.to(roomId).emit('message-read', result);
     } else if (!receiverInRoom && onlineUsers.has(toUserId)) {
       // Connected receiver but not in the room
-      // Update the message status in the DB
-      const result = await messageController.updateMessageStatus(message.id, 'delivered', fromUserId);
-
+      // Update the message status in the DB and chat counter
+      const updatedMessage = await messageController.updateMessageStatus(message.id, 'delivered', fromUserId);
       const updatedChatCounter = await chatController.updateChatCounter({ chatId: message.chat_id, fromUserId });
-      console.log(updatedChatCounter, 'hello updated chat')
-      // Notify the sender that the message delivered to partner that
-      // not currently in the chat room
-      io.to(roomId).emit('message-delivered', result);
-      // Tell the receiver by its socketId, that there is a new messages
-      // so display the new message as last message
-      io.to(onlineUsers.get(toUserId)).emit('message-delivered-to-receiver', result);
-      io.to(onlineUsers.get(toUserId)).emit('updated-chat-counter', updatedChatCounter);
+
+      // Inform the sender that the message was delivered to the recipient,
+      // who is online but not currently in the chat room.
+      io.to(roomId).emit('message-delivered', updatedMessage);
+
+      // Notify the receiver via their socket ID about the new message,
+      // prompting them to display it as the latest message.
+      const receiverSocketId = onlineUsers.get(toUserId);
+      if (receiverSocketId) {
+        io.to(receiverSocketId).emit('message-delivered-to-receiver', updatedMessage);
+        io.to(receiverSocketId).emit('updated-chat-counter', updatedChatCounter);
+      } else {
+        console.log(`User ${toUserId} is offline, skipping message notification.`);
+      }
     } else {
       // Disconnected receiver
       // If user not //
@@ -113,12 +124,15 @@ io.on('connect', (socket) => {
 
   // ===== Start Leaving room listener =====
   socket.on('leave-room', ({ roomId, userId }) => {
-    // console.log(roomId, userId)
+    // Identify the user by its socket.id
     const socketByUserId = onlineUsers.get(userId);
 
     if (socketByUserId === socket.id) {
-      socket.leave(roomId); // Remove socket from room with roomId
-      io.to(roomId).emit('user-left', { userId, roomId }); // Notify other users in the room
+      // Notify other users in the room, that partner-left-room
+      io.to(roomId).emit('partner-left-room', { userId, roomId });
+
+      // Remove socket from room with roomId
+      socket.leave(roomId);
     }
   })
   // ====== End leaving room event =======

@@ -19,15 +19,53 @@ class Message {
   }
 
   static async updateSingleMessageStatus ({ messageId, messageStatus, userId }) {
-    const { rows } = await pool.query(`
+    /* const { rows } = await pool.query(`
     UPDATE messages
       SET status = $1
         WHERE id = $2 AND from_user_id = $3
         RETURNING *;
+    `, [messageStatus, messageId, userId]); */
+    const { rows } = await pool.query(`
+      WITH updated_message AS (
+        UPDATE messages
+        SET status = $1
+        WHERE id = $2
+        RETURNING *
+      )
+
+      SELECT
+        um.*,
+
+        --- Here we are selecting the encrypted session key based receiver ---
+        --- As he receive the message from socket ---
+        CASE
+          WHEN sk.sender_id = $3 THEN sk.encrypted_session_for_receiver
+          ELSE sk.encrypted_session_for_sender
+        END AS encrypted_session_base64
+
+      FROM updated_message um
+
+      LEFT JOIN session_keys sk ON sk.chat_id = um.chat_id;
     `, [messageStatus, messageId, userId]);
     return rows[0]
   }
 
+  /*   const { rows } = await pool.query(`
+    WITH updated_message AS (
+      UPDATE messages
+      SET status = $1
+      WHERE id = $2 AND from_user_id = $3
+      RETURNING *
+    )
+    SELECT
+      um.*,
+      CASE
+        WHEN sk.sender_id = $3 THEN sk.encrypted_session_for_sender
+        ELSE sk.encrypted_session_for_receiver
+      END AS encrypted_session_base64
+    FROM updated_message um
+    LEFT JOIN session_keys sk ON um.chat_id = sk.chat_id;
+  `, [messageStatus, messageId, userId]); */
   static async updateChatMessagesStatusToDelivered ({ chatId, userId }) {
     const { rows } = await pool.query(`
     UPDATE messages
