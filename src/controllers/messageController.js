@@ -99,7 +99,6 @@ exports.updateMessageStatus = catchAsync(async (messageId, messageStatus, fromUs
   //  === Starting update =======
   const result = await messageModel.updateSingleMessageStatus({ messageId, messageStatus, userId: fromUserId });
   // ====== End of update message =====
-  console.log(result, 'hello🥵🥰🥰🥰')
   // === Send back result ======
   return result;
 });
@@ -112,3 +111,14 @@ exports.updateMessagesStatusWithJoinRoom = catchAsync(async (fromUserId, toUserI
   return result;
   //
 })
+
+exports.updateAllMessagesWithPartnerReconnect = async (userId) => {
+  try {
+    if (!userId) return
+
+    const updatedMessagesToDelivered = await messageModel.updateAllMessageStatusToDelivered(userId);
+    return updatedMessagesToDelivered
+  } catch (error) {
+    console.log(error)
+  }
+}

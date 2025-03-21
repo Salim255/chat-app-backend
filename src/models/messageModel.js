@@ -110,9 +110,19 @@ class Message {
       WHERE (status = 'delivered' OR  status = 'sent')  AND to_user_id = $1 AND from_user_id = $2
           RETURNING *;
       `, [toUser, fromUser])
-    console.log(rows[0])
+    return rows
+  }
+
+  // Here we update messages that were sent to this userId to 'delivered' once they are connected
+  static async updateAllMessageStatusToDelivered (userId) {
+    console.log(userId, 'Hello')
+    const { rows } = await pool.query(`
+        UPDATE messages msg
+        SET status = 'delivered'
+        WHERE msg.to_user_id = $1
+        RETURNING *
+      `, [userId]);
     return rows
   }
 }
-
 module.exports = Message

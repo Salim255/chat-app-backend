@@ -12,6 +12,8 @@ io.on('connect', (socket) => {
     if (userId) {
       const result = await authController.updateUserConnectionStatus(userId, 'online');
       if (result) {
+        // Update all messages where this user is the receiver, to delivered
+        await messageController.updateAllMessagesWithPartnerReconnect(userId);
         socket.broadcast.emit('user-online', result)
       }
     }
@@ -74,50 +76,54 @@ io.on('connect', (socket) => {
 
   // ===== Start listen for "message" events to broadcast messages in the room ====
   socket.on('send-message', async ({ roomId, message, toUserId, fromUserId }) => {
-    // Check if the Receiver in the room
-    // search for a room by its id
-    const receiverSocketId = onlineUsers.get(toUserId);
-    const room = io.sockets.adapter.rooms.get(roomId);
-
-    // check if the toUser id socketId is in the room with id
-    const receiverInRoom = room && room.has(receiverSocketId);
-
-    if (receiverInRoom) {
-      console.log(' All Receiver is in room')
-      // ===== Update chat counter when both users are in the room ====
-      await chatController.resetChatCounter({ chatId: message.chat_id });
-
-      // Update the message status to read in the DB
-      const result = await messageController.updateMessageStatus(message.id, 'read', fromUserId);
-
-      if (!result) {
-        return;
-      }
-      // Notify the sender that the  receiver has read  the message
-      socket.to(roomId).emit('message-read', result);
-    } else if (!receiverInRoom && onlineUsers.has(toUserId)) {
-      // Connected receiver but not in the room
-      // Update the message status in the DB and chat counter
-      const updatedMessage = await messageController.updateMessageStatus(message.id, 'delivered', fromUserId);
-      const updatedChatCounter = await chatController.updateChatCounter({ chatId: message.chat_id, fromUserId });
-
-      // Inform the sender that the message was delivered to the recipient,
-      // who is online but not currently in the chat room.
-      io.to(roomId).emit('message-delivered', updatedMessage);
-
-      // Notify the receiver via their socket ID about the new message,
-      // prompting them to display it as the latest message.
+    try {
+      // Check if the Receiver in the room
+      // search for a room by its id
       const receiverSocketId = onlineUsers.get(toUserId);
-      if (receiverSocketId) {
-        io.to(receiverSocketId).emit('message-delivered-to-receiver', updatedMessage);
-        io.to(receiverSocketId).emit('updated-chat-counter', updatedChatCounter);
+      const room = io.sockets.adapter.rooms.get(roomId);
+
+      // check if the toUser id socketId is in the room with id
+      const receiverInRoom = room && room.has(receiverSocketId);
+
+      if (receiverInRoom) {
+        console.log(' All Receiver is in room')
+        // ===== Update chat counter when both users are in the room ====
+        await chatController.resetChatCounter({ chatId: message.chat_id });
+
+        // Update the message status to read in the DB
+        const result = await messageController.updateMessageStatus(message.id, 'read', fromUserId);
+
+        if (!result) {
+          return;
+        }
+        // Notify the sender that the  receiver has read  the message
+        socket.to(roomId).emit('message-read', result);
+      } else if (!receiverInRoom && onlineUsers.has(toUserId)) {
+        // Connected receiver but not in the room
+        // Update the message status in the DB and chat counter
+        const updatedMessage = await messageController.updateMessageStatus(message.id, 'delivered', fromUserId);
+        const updatedChatCounter = await chatController.updateChatCounter({ chatId: message.chat_id, fromUserId });
+
+        // Inform the sender that the message was delivered to the recipient,
+        // who is online but not currently in the chat room.
+        io.to(roomId).emit('message-delivered', updatedMessage);
+
+        // Notify the receiver via their socket ID about the new message,
+        // prompting them to display it as the latest message.
+        const receiverSocketId = onlineUsers.get(toUserId);
+        if (receiverSocketId) {
+          io.to(receiverSocketId).emit('message-delivered-to-receiver', updatedMessage);
+          io.to(receiverSocketId).emit('updated-chat-counter', updatedChatCounter);
+        } else {
+          console.log(`User ${toUserId} is offline, skipping message notification.`);
+        }
       } else {
-        console.log(`User ${toUserId} is offline, skipping message notification.`);
+        // Disconnected receiver
+        // If user not //
+        console.log('Not connected user')
       }
-    } else {
-      // Disconnected receiver
-      // If user not //
-      console.log('Not connected user')
+    } catch (error) {
+      console.error('Error in send-message:', error);
     }
   });
   // ===== End Message Event =====
@@ -139,34 +145,34 @@ io.on('connect', (socket) => {
 
   // === Start"disconnecting" event to access the rooms before the socket is removed
   socket.on('disconnecting', async () => {
-    const socketId = socket.id;
-    // Find the key corresponding to the value
-    for (const [mapKey, mapValue] of onlineUsers.entries()) {
-      if (mapValue === socketId) {
-        // Notify that the user is offline
-        const userId = mapKey;
-        const result = await authController.updateUserConnectionStatus(userId, 'offline');
-        if (result) {
-          socket.broadcast.emit('user-offline', result);
+    try {
+      const socketId = socket.id;
+      // Find the key corresponding to the value
+      for (const [mapKey, mapValue] of onlineUsers.entries()) {
+        if (mapValue === socketId) {
+          // Notify that the user is offline
+          const userId = mapKey;
+          const result = await authController.updateUserConnectionStatus(userId, 'offline');
+          if (result) {
+            socket.broadcast.emit('user-offline', result);
+          }
+          // Remove from custom data structure
+          onlineUsers.delete(mapKey);
+          break;
         }
-
-        // Remove from custom data structure
-        onlineUsers.delete(mapKey);
-        break;
       }
+      // ====== End disconnecting event ========
+
+      // Check all rooms the socket is in and leave them
+      socket.rooms.forEach(roomId => {
+        socket.leave(roomId); // Ensure the socket leaves the rooms
+        if (io.sockets.adapter.rooms.get(roomId)?.size === 0) {
+          console.log(`Room ${roomId} is now empty and will be cleaned up.`);
+        }
+      });
+    } catch (error) {
+      console.error('Error during disconnect:', error);
     }
-    // ====== End disconnecting event ========
-    // Check all rooms the socket is in and leave them
-    socket.rooms.forEach(roomId => {
-      socket.leave(roomId); // Ensure the socket leaves the rooms
-      console.log(`Socket ${socketId} left room: ${roomId}`);
-
-      // Check if the room is now empty and perform cleanup if needed
-      const room = io.sockets.adapter.rooms.get(roomId);
-      if (room && room.size === 0) {
-        console.log(`Room ${roomId} is empty and can be cleaned up.`);
-      }
-    });
   });
   // ====== End  Connect section =====
 
