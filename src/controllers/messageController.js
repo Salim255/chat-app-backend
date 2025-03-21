@@ -22,17 +22,13 @@ exports.sendMessage = catchAsync(async (req, res, next) => {
     }
 
     const messageStatus = partnerConnectionStatus === 'online' ? 'delivered' : 'sent';
-    const { id: messageId } = await messageModel.insert({ content, fromUserId: req.userId, toUserId, chatId, messageStatus });
+    const message = await messageModel.insert({ content, fromUserId: req.userId, toUserId, chatId, messageStatus });
 
     // === Update chat last message field  ===
-    if (messageId) {
-      await chatModel.updateChatLastMessageIdField({ chatId, messageId })
+    if (message && message.id) {
+      await chatModel.updateChatLastMessageIdField({ chatId, messageId: message.id })
     }
     // ==== END updated last message
-
-    // ==== Start Fetching chat =====
-    const chat = await chatModel.getChatByChatId({ userId: req.userId, chatId });
-    // ===== End Fetching chat =======
 
     // Confirm and End transaction
     await pool.query('COMMIT');
@@ -41,7 +37,7 @@ exports.sendMessage = catchAsync(async (req, res, next) => {
     // ==== Send response =====
     res.status(200).json({
       status: 'success',
-      data: chat
+      data: message
     })
   } catch (error) {
     await pool.query('ROLLBACK');
@@ -103,7 +99,7 @@ exports.updateMessageStatus = catchAsync(async (messageId, messageStatus, fromUs
   //  === Starting update =======
   const result = await messageModel.updateSingleMessageStatus({ messageId, messageStatus, userId: fromUserId });
   // ====== End of update message =====
-
+  console.log(result, 'hello🥵🥰🥰🥰')
   // === Send back result ======
   return result;
 });
