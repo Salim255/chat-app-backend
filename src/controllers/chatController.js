@@ -84,8 +84,9 @@ exports.createChat = catchAsync(async (req, res, next) => {
       encryptedSessionForSender: encryptedSessionKeyForSenderBase64,
       encryptedSessionForReceiver: encryptedSessionKeyForReceiverBase64
     };
-    const sessionKeys = await sessionModel.insert(createSessionData);
-    console.log(sessionKeys)
+
+    await sessionModel.insert(createSessionData);
+
     // ====== End create sessionKeys =====
 
     // ===== Start Update chat's last_message_id===
