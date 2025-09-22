@@ -24,6 +24,7 @@ class Chat {
           created_at, 
           content, 
           from_user_id, 
+          to_user_id,
           status, 
           chat_id
         FROM messages WHERE id = chats.last_message_id
@@ -99,10 +100,18 @@ class Chat {
     ------ Get users in the chat ------
     (SELECT jsonb_agg(users)
      FROM (
-      SELECT id, first_name, last_name, avatar, connection_status FROM users
+      SELECT 
+          id, 
+          first_name, 
+          last_name, 
+          avatar, 
+          connection_status 
+        FROM users
         WHERE id IN (
-          SELECT uc.user_id FROM user_chats uc
-            WHERE uc.chat_id = chat_id)
+          SELECT 
+            uc.user_id
+            FROM user_chats uc
+            WHERE uc.chat_id = $2)
             ) AS users
         ) AS users,
  
@@ -113,7 +122,8 @@ class Chat {
           id, 
           created_at, 
           content, 
-          from_user_id, 
+          from_user_id,
+          to_user_id,
           status, 
           chat_id
         FROM messages WHERE id = chats.last_message_id
