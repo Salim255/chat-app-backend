@@ -1,0 +1,50 @@
+{
+  "name": "chat-app-backend",
+  "version": "1.0.0",
+  "description": "My chat app API",
+  "main": "index.js",
+  "scripts": {
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "start": "npm run migrate-up && NODE_ENV=development nodemon index.js",
+    "start:prod": "npm run migrate-up && NODE_ENV=production node index.js",
+    "test": "jest",
+    "migrate": "node-pg-migrate",
+    "migrate-up": "node-pg-migrate up",
+    "migrate-down": "node-pg-migrate down",
+    "migrate-create": "npm run migrate create"
+  },
+  "author": "Hassan Salim",
+  "license": "ISC",
+  "devDependencies": {
+    "eslint": "^8.57.0",
+    "eslint-config-standard": "^17.1.0",
+    "eslint-plugin-import": "^2.29.1",
+    "eslint-plugin-n": "^16.6.2",
+    "eslint-plugin-promise": "^6.1.1",
+    "jest": "^29.7.0",
+    "supertest": "^6.3.4"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.729.0",
+    "bcryptjs": "^2.4.3",
+    "body-parser": "^1.20.3",
+    "cloudinary": "^2.5.1",
+    "cors": "^2.8.5",
+    "crypto-js": "^4.2.0",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "jsonwebtoken": "^9.0.2",
+    "morgan": "^1.10.0",
+    "multer": "^1.4.5-lts.1",
+    "node-pg-migrate": "^6.2.2",
+    "pg": "^8.13.1",
+    "pg-format": "^1.0.4",
+    "sharp": "^0.33.5",
+    "socket.io": "^4.7.5",
+    "validator": "^13.11.0"
+  },
+  "eslintIgnore": [
+    "tests/**/*.js"
+  ]
+}
