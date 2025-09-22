@@ -1,5 +1,5 @@
 const io = require('../../server').io;
-const { messageController, authController, generateRoomId, chatController } = require('./controllers/socketController');
+const { messageController, authController, generateRoomId, chatController, sessionController } = require('./controllers/socketController');
 
 const onlineUsers = new Map(); // Map of user -> socketId
 
@@ -20,6 +20,30 @@ io.on('connect', (socket) => {
   })
   // ======= END register listener ===========
 
+  // ==== Listen to newly created conversation ====
+  socket.on('new-conversation', async (conversation) => {
+    try {
+      // Get the receiver id
+      const receiverId = conversation?.last_message?.to_user_id;
+
+      if (!receiverId) return;
+
+      // Get the receiver socket
+      const receiverSocketId = onlineUsers.get(receiverId);
+      if (!receiverSocketId) return
+
+      // Send notification to the receiver to tell him that
+      // there are a new conversation
+      // Fetch the encryptionSession for the receiver
+      const sessionKey = await sessionController.getSessionByUser({ chatId: conversation.id });
+
+      if (!sessionKey?.encrypted_session_base64) return
+
+      io.to(receiverSocketId).emit('listen-to-new-conversation', { ...conversation, encrypted_session_base64: sessionKey.encrypted_session_base64 })
+    } catch (error) {
+      console.log('error', error)
+    }
+  })
   // ===== Listen for the "join-room" event to create/join a chat room =====
   socket.on('join-room', async ({ fromUserId, toUserId, chatId, lastMessageSenderId }) => {
     const roomId = generateRoomId(fromUserId, toUserId);
@@ -44,16 +68,6 @@ io.on('connect', (socket) => {
     if (roomSize > 1) {
       console.log('Partner joined room')
       io.to(roomId).emit('partner-joined-room', result);
-
-      // We need this to update conversation
-      // socket.to(roomId).emit('last-partner-joined-room', result);
-      // Check that result is not empty array
-      if (result && result.length > 0) {
-        // Here we send notification to the sender
-        // (user that send message to this socket.id)
-        // Broadcast the notification to other users in the room except the current socket
-        // socket.to(roomId).emit('partner-joined-room', result);
-      }
     }
   });
   // ====== End Join room  listener ========

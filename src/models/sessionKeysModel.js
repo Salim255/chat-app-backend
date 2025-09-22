@@ -22,6 +22,17 @@ class SessionKeys {
     ]);
     return rows[0]
   }
+
+  static async getSessionByUser ({ chatId }) {
+    const { rows } = await await pool.query(`
+      SELECT 
+        -- Encrypted session key based on sender_id
+        sk.encrypted_session_for_receiver AS encrypted_session_base64
+      FROM session_keys sk
+      WHERE chat_id=$1
+      `, [chatId])
+    return rows[0]
+  }
 }
 
 module.exports = SessionKeys;

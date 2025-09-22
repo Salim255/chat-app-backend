@@ -25,9 +25,12 @@ exports.sendMessage = catchAsync(async (req, res, next) => {
     const message = await messageModel.insert({ content, fromUserId: req.userId, toUserId, chatId, messageStatus });
 
     // === Update chat last message field  ===
-    if (message && message.id) {
-      await chatModel.updateChatLastMessageIdField({ chatId, messageId: message.id })
+    if (!message || !message.id) {
+      await pool.query('ROLLBACK');
+      return next(new AppError('Something went wrong', 400));
     }
+
+    await chatModel.updateChatLastMessageIdField({ chatId, messageId: message.id })
     // ==== END updated last message
 
     // Confirm and End transaction
